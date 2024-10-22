@@ -1,4 +1,4 @@
-import SamuraiDB from './SamuraiDB';
+import SamuraiDB from './samuraidb.js';
 import { promises as fs } from 'fs';
 
 jest.mock('fs', () => ({

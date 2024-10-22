@@ -1,4 +1,4 @@
-import SamuraiDB from "./samuraidb.js";
+import SamuraiDB from "./core/samuraidb.js";
 
 const samuraiDB = new SamuraiDB()
 
