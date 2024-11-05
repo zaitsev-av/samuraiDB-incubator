@@ -2,6 +2,7 @@ import net from 'net';
 import { fileURLToPath } from 'url';
 import SamuraiDB from "../core/samuraidb.js";
 import path from 'path';
+import  { randomUUID } from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,16 +18,27 @@ const server = net.createServer(async (socket) => {
 
         console.log('Received from client:', data.toString());
 
-
         switch (requestAction.type) {
             case 'SET': {
-                await db.set(requestAction.payload.id, requestAction.payload.dto)
+                const id = randomUUID();
+                await db.set(id, {...requestAction.payload, id: id})
+                let response = {
+                    ...requestAction.payload,
+                    id,
+                    uuid: requestAction.uuid
+                };
+                console.log(JSON.stringify(response))
+                socket.write(JSON.stringify(response))
                 break;
             }
             case 'GET': {
                 const data = await db.get(requestAction.payload.id)
-                console.log(JSON.stringify(data))
-                socket.write(JSON.stringify(data))
+                let response = {
+                    ...data,
+                    uuid: requestAction.uuid
+                };
+                console.log(JSON.stringify(response))
+                socket.write(JSON.stringify(response))
                 break;
             }
             default: {
