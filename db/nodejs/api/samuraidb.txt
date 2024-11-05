@@ -1,2 +1,0 @@
-1729596443220,{"id":"123","name":"Miyamoto Musashi","health":100,"attackPower":50,"defensePower":30,"weapon":"Katana"}
-1729596445816,{"id":"123","name":"Miyamoto Musashi2","health":100,"attackPower":50,"defensePower":30,"weapon":"Katana"}
