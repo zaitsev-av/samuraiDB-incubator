@@ -1,12 +1,14 @@
 import SamuraiDB from './samuraidb';
 import { promises as fs } from 'node:fs';
+import {FileAdapter} from "./file.adapter.js";
 
 describe('SamuraiDB', () => {
     const filename = 'testdb.txt';
     let db;
 
     beforeEach(() => {
-        db = new SamuraiDB(filename);
+        const fileAdapter = new FileAdapter(filename)
+        db = new SamuraiDB(fileAdapter);
         fs.readFile = jest.fn();
 
         if (jest.isMockFunction(fs.appendFile))

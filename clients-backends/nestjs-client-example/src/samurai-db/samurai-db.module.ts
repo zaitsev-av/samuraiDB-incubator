@@ -9,7 +9,8 @@ import { ConnectionService } from './infrastructure/connection.service';
   controllers: [],
   providers: [
     SamuraiDBDriver,
-    { provide: ConnectionService, useClass: SamuraiDBConnect },
+   // { provide: ConnectionService, useClass: SamuraiDBConnect },
+    SamuraiDBConnect
   ],
   exports: [SamuraiDBDriver],
 })

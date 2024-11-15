@@ -10,12 +10,30 @@ export class SamuraiDBConnect extends ConnectionService {
   private retryInterval: number;
   private attempt: number = 0; // Инициализация попыток с 0
   protected status: 'CONNECTING' | 'CONNECTED' = 'CONNECTING';
+  private onRejectHandler: () => void =  () => {}
+
 
   constructor(@Inject(MODULE_OPTIONS_TOKEN) private options: ModuleOptions) {
-    super();
-
+    super()
     this.retryInterval = options.initialRetryInterval;
     this.connect();
+  }
+
+  private reconnect(err) {
+    this.onRejectHandler()
+    console.error('Connection error:', err?.message);
+    this.status = 'CONNECTING';
+    this.attempt++; // Увеличение счетчика попыток
+
+    if (this.attempt <= this.options.maxRetries) {
+      console.log(
+          `Attempt ${this.attempt} failed. Retrying in ${this.retryInterval / 1000}s...`,
+      );
+      setTimeout(() => this.connect(), this.retryInterval);
+      this.retryInterval *= 2; // Увеличение времени задержки
+    } else {
+      console.error('Max retries reached. Please check the server.');
+    }
   }
 
   protected connect(): void {
@@ -30,19 +48,17 @@ export class SamuraiDBConnect extends ConnectionService {
     );
 
     this.client.on('error', (err) => {
-      console.error('Connection error:', err.message);
-      this.status = 'CONNECTING';
-      this.attempt++; // Увеличение счетчика попыток
-
-      if (this.attempt <= this.options.maxRetries) {
-        console.log(
-          `Attempt ${this.attempt} failed. Retrying in ${this.retryInterval / 1000}s...`,
-        );
-        setTimeout(() => this.connect(), this.retryInterval);
-        this.retryInterval *= 2; // Увеличение времени задержки
-      } else {
-        console.error('Max retries reached. Please check the server.');
-      }
+      console.log('on error')
+        this.reconnect(err)
     });
+
+    this.client.on('end', (err) => {
+      console.log('on end')
+      this.reconnect(err)
+    });
+  }
+
+  public onReject(callback: () => void) {
+    this.onRejectHandler = callback;
   }
 }

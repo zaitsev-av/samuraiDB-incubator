@@ -1,15 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'crypto';
-import { ConnectionService } from './infrastructure/connection.service';
+import {Injectable} from '@nestjs/common';
+import {randomUUID} from 'crypto';
+import {SamuraiDBConnect} from "./infrastructure/samurai-db-connect";
 
 @Injectable()
 export class SamuraiDBDriver<T> {
-  requestsMap = new Map<
-    string,
-    { resolve: (data: any) => void; reject: (data: any) => void }
-  >();
+  requestsMap: Map<
+      string,
+      { resolve: (data: any) => void; reject: (data: any) => void }
+  > = new Map();
 
-  constructor(private readonly connection: ConnectionService) {
+  constructor(private readonly connection: SamuraiDBConnect) {
+    connection.onReject(() => {
+      this.requestsMap.forEach(item => item.reject('Connection lost'))
+      this.requestsMap = new Map()
+    })
     connection.client.on('data', (data) => {
       console.log('Received from server:', data.toString());
       const action = JSON.parse(data.toString());
@@ -21,7 +25,7 @@ export class SamuraiDBDriver<T> {
   async getById(id: string): Promise<T> {
     const { promise, uuid } = this.registerRequest<T>();
     const action = { type: 'GET', payload: { id: id }, uuid: uuid };
-    this.connection.client.write(JSON.stringify(action));
+    this.connection.client.write(JSON.stringify(action)); // todo: if client not connected shuld reject
     return promise;
   }
 

@@ -3,11 +3,15 @@ import { fileURLToPath } from 'url';
 import SamuraiDB from "../core/samuraidb.js";
 import path from 'path';
 import  { randomUUID } from 'crypto';
+import {FileAdapter} from "../core/file.adapter.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const db = new SamuraiDB(__dirname + '/samuraidb.txt');
+const fileAdapter = new FileAdapter(__dirname + '/samuraidb.txt')
+const db = new SamuraiDB(fileAdapter);
+
+await db.init();
 
 const server = net.createServer(async (socket) => {
     console.log('Client connected');
@@ -37,7 +41,7 @@ const server = net.createServer(async (socket) => {
                     ...data,
                     uuid: requestAction.uuid
                 };
-                console.log(JSON.stringify(response))
+                console.log('response: ', JSON.stringify(response))
                 socket.write(JSON.stringify(response))
                 break;
             }

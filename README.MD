@@ -9,7 +9,12 @@
 
 ## Todo List
 
-- [ ] ⚠️ Fix tests
+- [x] ✅️ Fix tests
 - [x] ✅ Write to index offset and size of record
-- [ ] ⚠️ Restore index after restart app
-- [ ] ⚠️ Reconnect to DBServer on client side
+- [x] ✅ Restore index after restart app
+- [x] ✅ Reconnect to DBServer on client side
+- [ ] 🟩 reject/throw error when clieted make request and client is not connected (now loading always)
+- [ ] 🟩 todo: set work folder for DB (now we must set separate file name)
+- [ ] 🟩 migrate DB core/tests/server to type script
+- [ ] 🟩 determine second language for DB
+- [ ] 🟩 move Index logic to separate class IndexManager
