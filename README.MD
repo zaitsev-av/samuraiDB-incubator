@@ -14,7 +14,15 @@
 - [x] ✅ Restore index after restart app
 - [x] ✅ Reconnect to DBServer on client side
 - [x] ✅ reject/throw error when clieted make request and client is not connected (now loading always)
-- [x] 🟩 todo: set work folder for DB (now we must set separate file name)
-- [x] 🟩 migrate DB core/tests/server to type script
-- [ ] 🟩 determine second language for DB
-- [ ] 🟩 move Index logic to separate class IndexManager
+- [x] ✅ todo: set work folder for DB (now we must set separate file name)
+- [x] ✅ migrate DB core/tests/server to type script
+- [x] ✅ determine second language for DB
+- [x] ✅ move Index logic to separate class IndexManager
+- [ ] 🟩 add/check eslint/prettier
+- [ ] 🟩 add ability to create some independed databases
+- [ ] 🟩 add SegmentManager
+- [ ] 🟩 add CompactionManager (add syntetic delay between files or record as settings when compaction)
+- [ ] 🟩 add unit tests for FileAdapter
+- [ ] 🟩 add unit tests for IndexManager
+- [ ] 🟩 add unit tests for SegmentManager
+- [ ] 🟩 add unit tests for CompactionManager

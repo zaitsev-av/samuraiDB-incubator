@@ -2,13 +2,15 @@ import SamuraiDB from './samuraidb';
 import { promises as fs } from 'node:fs';
 import { FileAdapter } from './file.adapter';
 import { join } from 'node:path';
+import {IndexManager} from "./index-manager";
 
 describe('SamuraiDB', () => {
   const dir = join(__dirname, '..', '..', '__tests__', 'db')
   let db: SamuraiDB;
   beforeEach(async () => {
-    const fileAdapter = new FileAdapter(dir, );
-    db = new SamuraiDB(fileAdapter);
+    const fileAdapter = new FileAdapter(dir);
+    const indexManager = new IndexManager(fileAdapter)
+    db = new SamuraiDB(fileAdapter, indexManager);
 
     await db.init();
 
