@@ -10,24 +10,25 @@ export class SamuraiDBConnect extends ConnectionService {
   private retryInterval: number;
   private attempt: number = 0; // Инициализация попыток с 0
   protected status: 'CONNECTING' | 'CONNECTED' = 'CONNECTING';
-  private onRejectHandler: () => void =  () => {}
 
+  private subscriptions = new Map<'connect' | 'reject', () => void>();
 
   constructor(@Inject(MODULE_OPTIONS_TOKEN) private options: ModuleOptions) {
-    super()
+    super();
     this.retryInterval = options.initialRetryInterval;
     this.connect();
   }
 
   private reconnect(err) {
-    this.onRejectHandler()
+    this.onReject();
+
     console.error('Connection error:', err?.message);
     this.status = 'CONNECTING';
     this.attempt++; // Увеличение счетчика попыток
 
     if (this.attempt <= this.options.maxRetries) {
       console.log(
-          `Attempt ${this.attempt} failed. Retrying in ${this.retryInterval / 1000}s...`,
+        `Attempt ${this.attempt} failed. Retrying in ${this.retryInterval / 1000}s...`,
       );
       setTimeout(() => this.connect(), this.retryInterval);
       this.retryInterval *= 2; // Увеличение времени задержки
@@ -44,21 +45,36 @@ export class SamuraiDBConnect extends ConnectionService {
         this.status = 'CONNECTED';
         this.retryInterval = this.options.initialRetryInterval; // Сброс интервала при успешном подключении
         this.attempt = 0; // Сброс счетчика попыток при успешном подключении
+
+        this.onConnect();
       },
     );
 
     this.client.on('error', (err) => {
-      console.log('on error')
-        this.reconnect(err)
+      console.log('on error');
+      this.reconnect(err);
     });
 
     this.client.on('end', (err) => {
-      console.log('on end')
-      this.reconnect(err)
+      console.log('on end');
+      this.reconnect(err);
     });
   }
 
-  public onReject(callback: () => void) {
-    this.onRejectHandler = callback;
+  public subscribeToEvents(listener: 'connect', handler: () => void): void;
+  public subscribeToEvents(listener: 'reject', handler: () => void): void;
+
+  public subscribeToEvents(
+    listener: 'connect' | 'reject',
+    handler: () => void,
+  ): void {
+    this.subscriptions.set(listener, handler);
+  }
+
+  private onReject() {
+    this.subscriptions.get('reject')?.();
+  }
+  private onConnect() {
+    this.subscriptions.get('connect')?.();
   }
 }
