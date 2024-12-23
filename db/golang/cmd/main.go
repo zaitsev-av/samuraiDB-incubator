@@ -4,15 +4,16 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"log"
 	"net"
 	"path/filepath"
+	fa "samurai-db/internal/file-adapter"
+	im "samurai-db/internal/index-manager"
+	sdb "samurai-db/internal/samurai-db"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
-// Определение основных структур для работы с запросами
 type RequestAction struct {
 	Type    string                 `json:"type"`
 	Payload map[string]interface{} `json:"payload"`
@@ -21,9 +22,9 @@ type RequestAction struct {
 
 func main() {
 	dir := filepath.Join("db")
-	fileAdapter := NewFileAdapter(dir)
-	indexManager := NewIndexManager(fileAdapter)
-	db := NewSamuraiDB(fileAdapter, indexManager)
+	fileAdapter := fa.NewAdapter(dir)
+	indexManager := im.NewIndexManager(fileAdapter)
+	db := sdb.NewSamuraiDB(fileAdapter, indexManager)
 
 	// Инициализация базы данных
 	if err := db.Init(); err != nil {
@@ -50,7 +51,7 @@ func main() {
 	}
 }
 
-func handleConnection(conn net.Conn, db *SamuraiDB) {
+func handleConnection(conn net.Conn, db *sdb.SamuraiDB) {
 	defer conn.Close()
 	log.Println("Client connected")
 
@@ -94,13 +95,10 @@ func handleConnection(conn net.Conn, db *SamuraiDB) {
 			id, ok := requestAction.Payload["id"].(string)
 			if !ok {
 				fmt.Fprintf(conn, "Invalid id format\n")
-				continue
 			}
-
 			data, err := db.Get(id)
 			if err != nil || data == nil {
 				fmt.Fprintf(conn, "Data not found\n")
-				continue
 			}
 
 			response := map[string]interface{}{
