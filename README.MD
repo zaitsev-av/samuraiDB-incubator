@@ -18,10 +18,14 @@
 - [x] ✅ migrate DB core/tests/server to type script
 - [x] ✅ determine second language for DB
 - [x] ✅ move Index logic to separate class IndexManager
+- [ ] 🟩 fix db core nodejs tests
+- [ ] 🟩 update entity (фактически тот же db.set)
+- [ ] 🟩 delete entity
+- [ ] 🟩 get all
+- [x] ✅ add SegmentManager
+- [ ] 🟩 add CompactionManager 🔥 (add syntetic delay between files or record as settings when compaction)
 - [ ] 🟩 add/check eslint/prettier
 - [ ] 🟩 add ability to create some independed databases
-- [ ] 🟩 add SegmentManager
-- [ ] 🟩 add CompactionManager (add syntetic delay between files or record as settings when compaction)
 - [ ] 🟩 add unit tests for FileAdapter
 - [ ] 🟩 add unit tests for IndexManager
 - [ ] 🟩 add unit tests for SegmentManager

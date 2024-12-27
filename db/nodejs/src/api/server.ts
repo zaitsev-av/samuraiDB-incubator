@@ -4,12 +4,14 @@ import { randomUUID } from 'crypto';
 import { FileAdapter } from '../core/file.adapter';
 import { join } from 'node:path';
 import { IndexManager } from '../core/index-manager';
+import {SegmentManager} from "../core/segment-manager";
 
 const dir = join(__dirname, '..', '..', 'db');
 
 const fileAdapter = new FileAdapter(dir);
+const segmentManager = new SegmentManager(fileAdapter);
 const indexManager = new IndexManager(fileAdapter);
-const db = new SamuraiDB(fileAdapter, indexManager);
+const db = new SamuraiDB(segmentManager, indexManager);
 
 (async () => {
   await db.init();

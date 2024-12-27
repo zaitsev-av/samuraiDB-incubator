@@ -1,7 +1,7 @@
 import { FileAdapter } from "./file.adapter";
 
 export class IndexManager {
-  private index: Map<string, any>
+  private index: Map<string, { segmentNumber: number; offset: number }>
 
   constructor(protected fileAdapter: FileAdapter) {}
 
@@ -9,8 +9,8 @@ export class IndexManager {
     this.index = await this.fileAdapter.readIndex();
   }
 
-  async setOffset(key: string, offset: number) {
-    this.index.set(key, offset);
+  async setOffset(key: string, offset: number, segmentNumber: number) {
+    this.index.set(key, {offset, segmentNumber});
     await this.fileAdapter.saveIndex(this.index);
   }
 
