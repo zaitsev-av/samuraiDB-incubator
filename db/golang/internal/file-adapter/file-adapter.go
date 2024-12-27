@@ -1,12 +1,15 @@
-package main
+package file_adapter
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -16,7 +19,7 @@ type FileAdapter struct {
 	mutex         sync.Mutex
 }
 
-func NewFileAdapter(dir string) *FileAdapter {
+func NewAdapter(dir string) *FileAdapter {
 	filename := filepath.Join(dir, "samuraidb.txt")
 	indexFileName := filepath.Join(dir, "index.txt")
 
@@ -40,7 +43,7 @@ func (fa *FileAdapter) Set(key string, data interface{}) (int64, error) {
 	}
 	defer file.Close()
 
-	offset, err := file.Seek(0, os.SEEK_END)
+	offset, err := file.Seek(0, io.SeekEnd)
 	if err != nil {
 		return 0, err
 	}
@@ -53,7 +56,7 @@ func (fa *FileAdapter) Set(key string, data interface{}) (int64, error) {
 	return offset, nil
 }
 
-func (fa *FileAdapter) Get(offset int64) (interface{}, error) {
+func (fa *FileAdapter) Get(offset int64) (map[string]any, error) {
 	if offset < 0 {
 		return nil, fmt.Errorf("Offset must be passed")
 	}
@@ -64,7 +67,7 @@ func (fa *FileAdapter) Get(offset int64) (interface{}, error) {
 	}
 	defer file.Close()
 
-	_, err = file.Seek(offset, os.SEEK_SET)
+	_, err = file.Seek(offset, io.SeekStart)
 	if err != nil {
 		return nil, err
 	}
@@ -78,12 +81,11 @@ func (fa *FileAdapter) Get(offset int64) (interface{}, error) {
 	line := string(buffer[:n])
 	_, storedValue, _ := parseEntry(line)
 
-	var value interface{}
+	var value map[string]any
 	err = json.Unmarshal([]byte(storedValue), &value)
 	if err != nil {
 		return nil, err
 	}
-
 	return value, nil
 }
 
@@ -91,20 +93,23 @@ func (fa *FileAdapter) SaveIndex(indexMap map[string]int64) error {
 	fa.mutex.Lock()
 	defer fa.mutex.Unlock()
 
-	serializedMap := serializeData(indexMap)
-	return ioutil.WriteFile(fa.indexFileName, []byte(serializedMap), 0644)
+	serializedMap, err := json.Marshal(indexMap)
+	if err != nil {
+		log.Fatal("were unable to serialize the data in SaveIndex")
+	}
+	return os.WriteFile(fa.indexFileName, serializedMap, 0644)
 }
 
-func (fa *FileAdapter) ReadIndex() (map[string]interface{}, error) {
-	fileContent, err := ioutil.ReadFile(fa.indexFileName)
+func (fa *FileAdapter) ReadIndex() (map[string]int64, error) {
+	fileContent, err := os.ReadFile(fa.indexFileName)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return make(map[string]interface{}), nil
+		if errors.Is(err, fs.ErrNotExist) {
+			return make(map[string]int64), nil
 		}
 		return nil, err
 	}
 
-	var index map[string]interface{}
+	var index map[string]int64
 	err = json.Unmarshal(fileContent, &index)
 	if err != nil {
 		return nil, err
@@ -114,18 +119,16 @@ func (fa *FileAdapter) ReadIndex() (map[string]interface{}, error) {
 }
 
 // Helper functions
-func serializeData(data interface{}) string {
+func serializeData(data any) string {
 	b, _ := json.Marshal(data)
 	return string(b)
 }
 
 func parseEntry(line string) (string, string, error) {
-	i := 0
-	for i < len(line) && line[i] != ',' {
-		i++
-	}
-	if i >= len(line) {
+	res := strings.SplitN(line, ",", 2)
+	if len(res) < 2 {
 		return "", "", fmt.Errorf("Invalid entry format")
 	}
-	return line[:i], line[i+1:], nil
+
+	return res[0], res[1], nil
 }

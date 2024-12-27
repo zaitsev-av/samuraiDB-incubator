@@ -1,11 +1,13 @@
-package main
+package index_manager
+
+import fa "samurai-db/internal/file-adapter"
 
 type IndexManager struct {
 	index       map[string]int64
-	fileAdapter *FileAdapter
+	fileAdapter *fa.FileAdapter
 }
 
-func NewIndexManager(fa *FileAdapter) *IndexManager {
+func NewIndexManager(fa *fa.FileAdapter) *IndexManager {
 	return &IndexManager{fileAdapter: fa}
 }
 
@@ -16,9 +18,7 @@ func (im *IndexManager) Init() error {
 	}
 	im.index = make(map[string]int64)
 	for key, value := range index {
-		if v, ok := value.(float64); ok {
-			im.index[key] = int64(v)
-		}
+		im.index[key] = value
 	}
 	return nil
 }
