@@ -22,6 +22,7 @@ type FileAdapter struct {
 }
 
 func NewAdapter(dir string) *FileAdapter {
+
 	filename := filepath.Join(dir, "samuraidb")
 	indexFileName := filepath.Join(dir, "index.txt")
 
@@ -33,13 +34,15 @@ func NewAdapter(dir string) *FileAdapter {
 	return &FileAdapter{filename: filename, indexFileName: indexFileName}
 }
 
-func (fa *FileAdapter) Set(key string, data interface{}) (int64, error) {
+func (fa *FileAdapter) Set(key string, currentSegment int, data []byte) (int64, error) {
 	fa.mutex.Lock()
 	defer fa.mutex.Unlock()
 
-	entry := fmt.Sprintf("%s,%s\n", key, serializeData(data))
+	entry := fmt.Sprintf("%s,%s\n", key, string(data))
 
-	file, err := os.OpenFile(fa.filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	fileName := fa.getSegmentFileName(currentSegment)
+
+	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return 0, err
 	}
@@ -120,14 +123,15 @@ func (fa *FileAdapter) ReadIndex() (map[string]int64, error) {
 	return index, nil
 }
 
-func (fa *FileAdapter) GetFileSize(segmentNumber int) int64 {
+func (fa *FileAdapter) GetFileSize(segmentNumber int) (int64, error) {
 	fileName := fa.getSegmentFileName(segmentNumber)
 	fileInfo, err := os.Stat(fileName)
 	if err != nil {
 		slog.Info("file data retrieval error", slog.Any("error: ", err))
+		return 0, err
 	}
 
-	return fileInfo.Size()
+	return fileInfo.Size(), nil
 }
 
 func (fa *FileAdapter) getSegmentFileName(segmentNumber int) string {

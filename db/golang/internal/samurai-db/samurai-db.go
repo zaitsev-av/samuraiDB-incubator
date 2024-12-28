@@ -1,17 +1,17 @@
 package samuraidb
 
 import (
-	fa "samurai-db/internal/file-adapter"
 	im "samurai-db/internal/index-manager"
+	sm "samurai-db/internal/segment-manager"
 )
 
 type SamuraiDB struct {
-	fileAdapter  *fa.FileAdapter
-	indexManager *im.IndexManager
+	segmentManager *sm.SegmentManager
+	indexManager   *im.IndexManager
 }
 
-func NewSamuraiDB(fileAdapter *fa.FileAdapter, indexManager *im.IndexManager) *SamuraiDB {
-	return &SamuraiDB{fileAdapter: fileAdapter, indexManager: indexManager}
+func NewSamuraiDB(segmentManager *sm.SegmentManager, indexManager *im.IndexManager) *SamuraiDB {
+	return &SamuraiDB{segmentManager: segmentManager, indexManager: indexManager}
 }
 
 func (db *SamuraiDB) Init() error {
@@ -19,17 +19,20 @@ func (db *SamuraiDB) Init() error {
 }
 
 func (db *SamuraiDB) Set(key string, data interface{}) error {
-	offset, err := db.fileAdapter.Set(key, data)
-	if err != nil {
-		return err
-	}
+	offset, _ := db.segmentManager.Set(key, data)
+	//todo refactor
+	//if err != nil {
+	//	return err
+	//}
 	return db.indexManager.SetOffset(key, offset)
 }
 
 func (db *SamuraiDB) Get(key string) (interface{}, error) {
-	offset, exists := db.indexManager.GetOffset(key)
+	//offset, exists := db.indexManager.GetOffset(key)
+	_, exists := db.indexManager.GetOffset(key)
 	if !exists {
 		return nil, nil // Key not found
 	}
-	return db.fileAdapter.Get(offset)
+	test, _ := db.segmentManager.Set("", "")
+	return test, nil
 }

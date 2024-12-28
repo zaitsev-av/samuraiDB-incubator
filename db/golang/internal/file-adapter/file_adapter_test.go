@@ -113,16 +113,18 @@ func TestFileAdapter_GetFileSize(t *testing.T) {
 
 	require.NoError(t, err)
 
-	fileSize := adapter.GetFileSize(sn)
+	fileSize, err := adapter.GetFileSize(sn)
+	require.NoError(t, err)
+
 	t.Logf("expected: %d, actual: %d", int64(len(testFileContent)), fileSize)
 	assert.Equal(t, int64(len(testFileContent)), fileSize)
 }
 
-func BenchmarkGetSegmentName(b *testing.B) {
-	dir := "test"
-	sn := 99
+func TestGetFileSize_FileNotFound(t *testing.T) {
+	dir := t.TempDir()
 	adapter := NewAdapter(dir)
-	for i := 0; i < b.N; i++ {
-		_ = adapter.getSegmentFileName(sn)
-	}
+
+	size, err := adapter.GetFileSize(999)
+	require.Error(t, err)
+	assert.Equal(t, int64(0), size)
 }

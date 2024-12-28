@@ -1,7 +1,8 @@
-package test
+package file_adapter
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -37,4 +38,28 @@ func BenchmarkParseEntryNew(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_, _, _ = parseEntryNew(line)
 	}
+}
+
+func BenchmarkGetSegmentName(b *testing.B) {
+	dir := "test"
+	sn := 99
+	adapter := NewAdapter(dir)
+	for i := 0; i < b.N; i++ {
+		_ = adapter.getSegmentFileName(sn)
+	}
+}
+
+func BenchmarkGetSegmentNameConcat(b *testing.B) {
+	dir := "test"
+	sn := 99
+	adapter := NewAdapter(dir)
+	res := concatFileName(adapter.filename, sn)
+	b.Log(res)
+	for i := 0; i < b.N; i++ {
+		_ = concatFileName(adapter.filename, sn)
+	}
+}
+
+func concatFileName(n string, i int) string {
+	return n + "_segment_" + strconv.Itoa(i) + "_segment_" + ".txt"
 }

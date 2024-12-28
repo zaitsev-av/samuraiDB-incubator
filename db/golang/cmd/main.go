@@ -11,6 +11,7 @@ import (
 	fa "samurai-db/internal/file-adapter"
 	im "samurai-db/internal/index-manager"
 	sdb "samurai-db/internal/samurai-db"
+	sm "samurai-db/internal/segment-manager"
 	"strings"
 )
 
@@ -24,7 +25,8 @@ func main() {
 	dir := filepath.Join("db")
 	fileAdapter := fa.NewAdapter(dir)
 	indexManager := im.NewIndexManager(fileAdapter)
-	db := sdb.NewSamuraiDB(fileAdapter, indexManager)
+	segmentManager := sm.NewSegmentManager(fileAdapter, 1024)
+	db := sdb.NewSamuraiDB(segmentManager, indexManager)
 
 	// Инициализация базы данных
 	if err := db.Init(); err != nil {
