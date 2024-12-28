@@ -95,10 +95,12 @@ func handleConnection(conn net.Conn, db *sdb.SamuraiDB) {
 			id, ok := requestAction.Payload["id"].(string)
 			if !ok {
 				fmt.Fprintf(conn, "Invalid id format\n")
+				continue
 			}
 			data, err := db.Get(id)
 			if err != nil || data == nil {
 				fmt.Fprintf(conn, "Data not found\n")
+				continue
 			}
 
 			response := map[string]interface{}{

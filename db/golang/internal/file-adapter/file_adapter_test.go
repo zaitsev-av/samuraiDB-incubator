@@ -2,7 +2,11 @@ package file_adapter
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -80,4 +84,45 @@ func TestFileAdapter_TestParseEntry(t *testing.T) {
 	line = "asdfhjklljh"
 	_, _, err = parseEntry(line)
 	assert.Error(t, err)
+}
+
+func TestFileAdapter_GetSegmentName(t *testing.T) {
+	dir := "test"
+	sn := 99
+	adapter := NewAdapter(dir)
+	builder := strings.Builder{}
+	builder.WriteString(adapter.filename)
+	builder.WriteString("_segment_")
+	builder.WriteString(strconv.Itoa(sn))
+	builder.WriteString(".txt")
+	resultStr := builder.String()
+
+	res := adapter.getSegmentFileName(sn)
+	t.Logf("Input: %s, Output: %s", resultStr, res)
+	assert.Equal(t, resultStr, res)
+}
+
+func TestFileAdapter_GetFileSize(t *testing.T) {
+	dir := "test"
+	sn := 99
+	adapter := NewAdapter(dir)
+	testFileName := adapter.getSegmentFileName(sn)
+
+	testFileContent := []byte("This is a test file.")
+	err := os.WriteFile(testFileName, testFileContent, 0644)
+
+	require.NoError(t, err)
+
+	fileSize := adapter.GetFileSize(sn)
+	t.Logf("expected: %d, actual: %d", int64(len(testFileContent)), fileSize)
+	assert.Equal(t, int64(len(testFileContent)), fileSize)
+}
+
+func BenchmarkGetSegmentName(b *testing.B) {
+	dir := "test"
+	sn := 99
+	adapter := NewAdapter(dir)
+	for i := 0; i < b.N; i++ {
+		_ = adapter.getSegmentFileName(sn)
+	}
 }

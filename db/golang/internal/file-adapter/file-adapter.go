@@ -7,8 +7,10 @@ import (
 	"io"
 	"io/fs"
 	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -20,7 +22,7 @@ type FileAdapter struct {
 }
 
 func NewAdapter(dir string) *FileAdapter {
-	filename := filepath.Join(dir, "samuraidb.txt")
+	filename := filepath.Join(dir, "samuraidb")
 	indexFileName := filepath.Join(dir, "index.txt")
 
 	// Проверка или создание директории
@@ -95,7 +97,7 @@ func (fa *FileAdapter) SaveIndex(indexMap map[string]int64) error {
 
 	serializedMap, err := json.Marshal(indexMap)
 	if err != nil {
-		log.Fatal("were unable to serialize the data in SaveIndex")
+		return fmt.Errorf("unable to serialize the data in SaveIndex: %w", err)
 	}
 	return os.WriteFile(fa.indexFileName, serializedMap, 0644)
 }
@@ -116,6 +118,25 @@ func (fa *FileAdapter) ReadIndex() (map[string]int64, error) {
 	}
 
 	return index, nil
+}
+
+func (fa *FileAdapter) GetFileSize(segmentNumber int) int64 {
+	fileName := fa.getSegmentFileName(segmentNumber)
+	fileInfo, err := os.Stat(fileName)
+	if err != nil {
+		slog.Info("file data retrieval error", slog.Any("error: ", err))
+	}
+
+	return fileInfo.Size()
+}
+
+func (fa *FileAdapter) getSegmentFileName(segmentNumber int) string {
+	fn := strings.Builder{}
+	fn.WriteString(fa.filename)
+	fn.WriteString("_segment_")
+	fn.WriteString(strconv.Itoa(segmentNumber))
+	fn.WriteString(".txt")
+	return fn.String()
 }
 
 // Helper functions
