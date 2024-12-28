@@ -35,7 +35,7 @@ func NewAdapter(dir string) *FileAdapter {
 	return &FileAdapter{filename: filename, indexFileName: indexFileName}
 }
 
-func (fa *FileAdapter) Set(key string, currentSegment int, data []byte) (int64, error) {
+func (fa *FileAdapter) Set(key string, currentSegment int64, data []byte) (int64, error) {
 	fa.mutex.Lock()
 	defer fa.mutex.Unlock()
 
@@ -62,7 +62,7 @@ func (fa *FileAdapter) Set(key string, currentSegment int, data []byte) (int64, 
 	return offset, nil
 }
 
-func (fa *FileAdapter) Get(offset int64, segment int) (map[string]any, error) {
+func (fa *FileAdapter) Get(offset int64, segment int64) (map[string]any, error) {
 	if offset < 0 {
 		return nil, fmt.Errorf("Offset must be passed")
 	}
@@ -126,7 +126,7 @@ func (fa *FileAdapter) ReadIndex() (map[string]common.IndexMap, error) {
 	return index, nil
 }
 
-func (fa *FileAdapter) GetFileSize(segmentNumber int) (int64, error) {
+func (fa *FileAdapter) GetFileSize(segmentNumber int64) (int64, error) {
 	fileName := fa.getSegmentFileName(segmentNumber)
 	fileInfo, err := os.Stat(fileName)
 	if err != nil {
@@ -137,19 +137,13 @@ func (fa *FileAdapter) GetFileSize(segmentNumber int) (int64, error) {
 	return fileInfo.Size(), nil
 }
 
-func (fa *FileAdapter) getSegmentFileName(segmentNumber int) string {
+func (fa *FileAdapter) getSegmentFileName(segmentNumber int64) string {
 	fn := strings.Builder{}
 	fn.WriteString(fa.filename)
 	fn.WriteString("_segment_")
-	fn.WriteString(strconv.Itoa(segmentNumber))
+	fn.WriteString(strconv.Itoa(int(segmentNumber)))
 	fn.WriteString(".txt")
 	return fn.String()
-}
-
-// Helper functions
-func serializeData(data any) string {
-	b, _ := json.Marshal(data)
-	return string(b)
 }
 
 func parseEntry(line string) (string, string, error) {

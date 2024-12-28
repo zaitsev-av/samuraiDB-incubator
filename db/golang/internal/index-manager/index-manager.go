@@ -26,7 +26,7 @@ func (im *IndexManager) Init() error {
 	return nil
 }
 
-func (im *IndexManager) SetIndexEntry(key string, offset int64, segment int) error {
+func (im *IndexManager) SetIndexEntry(key string, offset int64, segment int64) error {
 	im.index[key] = &common.IndexMap{
 		Offset:  offset,
 		Segment: segment,

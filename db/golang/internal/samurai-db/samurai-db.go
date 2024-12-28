@@ -19,7 +19,10 @@ func (db *SamuraiDB) Init() error {
 }
 
 func (db *SamuraiDB) Set(key string, data any) error {
-	offset, segment := db.segmentManager.Set(key, data)
+	offset, segment, err := db.segmentManager.Set(key, data)
+	if err != nil {
+		return err
+	}
 
 	return db.indexManager.SetIndexEntry(key, offset, segment)
 }
@@ -29,6 +32,9 @@ func (db *SamuraiDB) Get(key string) (any, error) {
 	if !exists {
 		return nil, nil // Key not found
 	}
-	test := db.segmentManager.Get(index.Offset, index.Segment)
+	test, err := db.segmentManager.Get(index.Offset, index.Segment)
+	if err != nil {
+		return nil, err
+	}
 	return test, nil
 }
