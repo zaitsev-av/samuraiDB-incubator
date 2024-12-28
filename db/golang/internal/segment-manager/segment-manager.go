@@ -18,7 +18,7 @@ func NewSegmentManager(adapter *fa.FileAdapter, size int) *SegmentManager {
 	return &SegmentManager{adapter: adapter, size: size, currentSegment: 0}
 }
 
-func (s *SegmentManager) Set(key string, data any) (int64, int) {
+func (s *SegmentManager) Set(key string, data any) (offset int64, segment int) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	size, err := s.adapter.GetFileSize(s.currentSegment)
@@ -35,13 +35,19 @@ func (s *SegmentManager) Set(key string, data any) (int64, int) {
 		s.currentSegment++
 	}
 
-	offset, err := s.adapter.Set(key, s.currentSegment, bytes)
+	offset, err = s.adapter.Set(key, s.currentSegment, bytes)
 	if err != nil {
 		slog.Info("failed set data to file", slog.Any("error: ", err))
 	}
 	return offset, s.currentSegment
 }
 
-func initCurrentSegment() int {
-	return 0
+func (s *SegmentManager) Get(offset int64, segment int) map[string]any {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	data, err := s.adapter.Get(offset, segment)
+	if err != nil {
+		slog.Info("data reading error ", slog.Any("error", err))
+	}
+	return data
 }

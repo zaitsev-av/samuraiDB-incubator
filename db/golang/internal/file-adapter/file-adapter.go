@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"samurai-db/common"
 	"strconv"
 	"strings"
 	"sync"
@@ -61,12 +62,14 @@ func (fa *FileAdapter) Set(key string, currentSegment int, data []byte) (int64, 
 	return offset, nil
 }
 
-func (fa *FileAdapter) Get(offset int64) (map[string]any, error) {
+func (fa *FileAdapter) Get(offset int64, segment int) (map[string]any, error) {
 	if offset < 0 {
 		return nil, fmt.Errorf("Offset must be passed")
 	}
 
-	file, err := os.Open(fa.filename)
+	fileName := fa.getSegmentFileName(segment)
+	file, err := os.Open(fileName)
+
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +97,7 @@ func (fa *FileAdapter) Get(offset int64) (map[string]any, error) {
 	return value, nil
 }
 
-func (fa *FileAdapter) SaveIndex(indexMap map[string]int64) error {
+func (fa *FileAdapter) SaveIndex(indexMap map[string]*common.IndexMap) error {
 	fa.mutex.Lock()
 	defer fa.mutex.Unlock()
 
@@ -105,16 +108,16 @@ func (fa *FileAdapter) SaveIndex(indexMap map[string]int64) error {
 	return os.WriteFile(fa.indexFileName, serializedMap, 0644)
 }
 
-func (fa *FileAdapter) ReadIndex() (map[string]int64, error) {
+func (fa *FileAdapter) ReadIndex() (map[string]common.IndexMap, error) {
 	fileContent, err := os.ReadFile(fa.indexFileName)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
-			return make(map[string]int64), nil
+			return make(map[string]common.IndexMap), nil
 		}
 		return nil, err
 	}
 
-	var index map[string]int64
+	var index map[string]common.IndexMap
 	err = json.Unmarshal(fileContent, &index)
 	if err != nil {
 		return nil, err
