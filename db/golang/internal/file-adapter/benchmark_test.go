@@ -45,7 +45,7 @@ func BenchmarkGetSegmentName(b *testing.B) {
 	sn := 99
 	adapter := NewAdapter(dir)
 	for i := 0; i < b.N; i++ {
-		_ = adapter.getSegmentFileName(sn)
+		_ = adapter.getSegmentFileName(int64(sn))
 	}
 }
 

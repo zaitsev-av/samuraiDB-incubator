@@ -1,10 +1,12 @@
 package file_adapter
 
 import (
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
+	"samurai-db/common"
 	"strconv"
 	"strings"
 	"testing"
@@ -23,13 +25,15 @@ func TestFileAdapter_SetAndGet(t *testing.T) {
 	adapter := NewAdapter(dir)
 
 	key := "exampleKey"
-	value := map[string]string{"name": "Samurai"}
-	offset, err := adapter.Set(key, value)
+	segment := int64(0)
+	value := map[string]any{"name": "Samurai"}
+	data, err := json.Marshal(value)
+	offset, err := adapter.Set(key, segment, data)
 
 	assert.NoError(t, err)
 	assert.GreaterOrEqual(t, offset, int64(0))
 
-	readValue, err := adapter.Get(offset)
+	readValue, err := adapter.Get(offset, segment)
 	assert.NoError(t, err)
 	assert.NoError(t, err)
 	assert.Equal(t, value, readValue)
@@ -39,7 +43,9 @@ func TestFileAdapter_SaveAndReadIndex(t *testing.T) {
 	dir := t.TempDir()
 	adapter := NewAdapter(dir)
 
-	value := map[string]int64{"name": 123, "name2": 456}
+	value := map[string]*common.IndexMap{
+		"qwe-123rty-12": {Offset: int64(123), Segment: int64(0)},
+	}
 	err := adapter.SaveIndex(value)
 
 	assert.NoError(t, err)
@@ -49,7 +55,7 @@ func TestFileAdapter_SaveAndReadIndex(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, value, readIndex)
 
-	value = map[string]int64{}
+	value = map[string]*common.IndexMap{}
 	err = adapter.SaveIndex(value)
 
 	assert.NoError(t, err)
@@ -64,7 +70,7 @@ func TestFileAdapter_GetInvalidOffset(t *testing.T) {
 	dir := t.TempDir()
 	adapter := NewAdapter(dir)
 
-	_, err := adapter.Get(-1)
+	_, err := adapter.Get(int64(1), int64(0))
 	assert.Error(t, err)
 	assert.Equal(t, "Offset must be passed", err.Error())
 }
@@ -88,12 +94,12 @@ func TestFileAdapter_TestParseEntry(t *testing.T) {
 
 func TestFileAdapter_GetSegmentName(t *testing.T) {
 	dir := "test"
-	sn := 99
+	sn := int64(99)
 	adapter := NewAdapter(dir)
 	builder := strings.Builder{}
 	builder.WriteString(adapter.filename)
 	builder.WriteString("_segment_")
-	builder.WriteString(strconv.Itoa(sn))
+	builder.WriteString(strconv.Itoa(int(sn)))
 	builder.WriteString(".txt")
 	resultStr := builder.String()
 
@@ -104,7 +110,7 @@ func TestFileAdapter_GetSegmentName(t *testing.T) {
 
 func TestFileAdapter_GetFileSize(t *testing.T) {
 	dir := "test"
-	sn := 99
+	sn := int64(99)
 	adapter := NewAdapter(dir)
 	testFileName := adapter.getSegmentFileName(sn)
 

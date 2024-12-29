@@ -32,9 +32,9 @@ func (db *SamuraiDB) Get(key string) (any, error) {
 	if !exists {
 		return nil, nil // Key not found
 	}
-	test, err := db.segmentManager.Get(index.Offset, index.Segment)
+	data, err := db.segmentManager.Get(index.Offset, index.Segment)
 	if err != nil {
 		return nil, err
 	}
-	return test, nil
+	return data, nil
 }
