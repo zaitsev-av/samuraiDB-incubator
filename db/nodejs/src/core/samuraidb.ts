@@ -1,16 +1,28 @@
 import { FileAdapter } from './file.adapter';
 import {IndexManager} from "./index-manager";
 import {SegmentManager} from "./segment-manager";
+import {CompactionManager} from "./compaction-manager";
 
 class SamuraiDB {
     /**
      *
      * @param indexManager
      */
-    constructor(protected segmentManager: SegmentManager, protected indexManager: IndexManager) {}
+    constructor(protected segmentManager: SegmentManager,
+                protected indexManager: IndexManager,
+                protected compactionManager: CompactionManager) {}
 
     async init() {
-        return this.indexManager.init()
+        await this.indexManager.init()
+        this.runCompactionInterval()
+    }
+
+    runCompactionInterval() {
+        setInterval( async () => {
+            await this.compactionManager.compactSegments();
+            this.runCompactionInterval();
+            console.log("COMPACTION FINISHED")
+        }, 10 * 1000)
     }
 
     async set(key: string, data: any) {
@@ -27,6 +39,12 @@ class SamuraiDB {
             return null; // Если ключа нет в индексе, возвращаем null
         }
         return await this.segmentManager.get(indexData.offset, indexData.segmentNumber);
+    }
+
+    async delete(key: string) {
+        await this.segmentManager.delete(key);
+        await this.indexManager.delete(key);
+
     }
 }
 

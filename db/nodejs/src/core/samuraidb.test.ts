@@ -10,7 +10,7 @@ describe('SamuraiDB', () => {
   beforeEach(async () => {
     const fileAdapter = new FileAdapter(dir);
     const indexManager = new IndexManager(fileAdapter)
-    db = new SamuraiDB(fileAdapter, indexManager);
+    db = new SamuraiDB(fileAdapter, indexManager, compactionManager);
 
     await db.init();
 

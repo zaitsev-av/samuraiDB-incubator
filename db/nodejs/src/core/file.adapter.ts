@@ -69,7 +69,7 @@ export class FileAdapter {
         try {
             const fileContent: string | undefined = await fs.readFile(this.indexFileName, 'utf-8');
 
-            if (!fileContent) {
+            if (!fileContent || !fileContent.trim()) {
                 // File is empty, return an empty Map
                 return new Map();
             }

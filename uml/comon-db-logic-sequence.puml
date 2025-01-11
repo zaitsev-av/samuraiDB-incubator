@@ -1,0 +1,16 @@
+@startuml
+actor User
+participant SamuraiDB
+participant SegmentManager
+participant IndexManager
+participant FileAdapter
+
+User -> SamuraiDB: executeQuery(query)
+SamuraiDB -> IndexManager: fetchRelevantIndexes(query)
+IndexManager -> FileAdapter: readIndexData
+FileAdapter -> IndexManager: indexes
+SamuraiDB -> SegmentManager: fetchSegments(indexes)
+SegmentManager -> FileAdapter: readSegmentData
+FileAdapter -> SegmentManager: segments
+SamuraiDB -> User: queryResult
+@enduml

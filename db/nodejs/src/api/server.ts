@@ -5,13 +5,15 @@ import { FileAdapter } from '../core/file.adapter';
 import { join } from 'node:path';
 import { IndexManager } from '../core/index-manager';
 import {SegmentManager} from "../core/segment-manager";
+import { CompactionManager } from '../core/compaction-manager';
 
 const dir = join(__dirname, '..', '..', 'db');
 
 const fileAdapter = new FileAdapter(dir);
 const segmentManager = new SegmentManager(fileAdapter);
 const indexManager = new IndexManager(fileAdapter);
-const db = new SamuraiDB(segmentManager, indexManager);
+const compactionManager = new CompactionManager(segmentManager, indexManager);
+const db = new SamuraiDB(segmentManager, indexManager, compactionManager);
 
 (async () => {
   await db.init();
@@ -42,6 +44,15 @@ const server = createServer(async (socket) => {
         const data = await db.get(requestAction.payload.id);
         let response = {
           ...data,
+          uuid: requestAction.uuid,
+        };
+        console.log('response: ', JSON.stringify(response));
+        socket.write(JSON.stringify(response));
+        break;
+      }
+      case 'DELETE': {
+        const data = await db.delete(requestAction.payload.id);
+        let response = {
           uuid: requestAction.uuid,
         };
         console.log('response: ', JSON.stringify(response));

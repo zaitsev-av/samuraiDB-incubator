@@ -43,7 +43,7 @@ export class SamuraiDBDriver<T> {
 
   async deleteById(id: string): Promise<void> {
     const { promise, uuid } = this.registerRequest<void>();
-    const action = { type: 'DELETE', payload: { id: Number(id) }, uuid: uuid };
+    const action = { type: 'DELETE', payload: { id: id }, uuid: uuid };
     this.connection.client.write(JSON.stringify(action) + '\n');
     return promise;
   }

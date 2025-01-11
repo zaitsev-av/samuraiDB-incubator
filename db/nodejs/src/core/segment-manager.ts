@@ -29,6 +29,10 @@ export class SegmentManager {
         return await this.fileAdapter.get(offset, segmentNumber);
     }
 
+    async delete(key: string) {
+        return this.set(key, 'DELETED');
+    }
+
     // getSegmentFilename(segment) {
     //     return `${this.baseFilename}_segment_${segment}.txt`;
     // }

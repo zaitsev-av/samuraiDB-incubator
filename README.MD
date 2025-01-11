@@ -20,8 +20,11 @@
 - [x] ✅ move Index logic to separate class IndexManager
 - [ ] 🟩 fix db core nodejs tests
 - [ ] 🟩 update entity (фактически тот же db.set)
-- [ ] 🟩 delete entity
-- [ ] 🟩 get all
+- [x] ✅ delete entity 🔥
+- [ ] 🟩 get all 🔥
+- [ ] 🟩 eslint 🔥
+- [ ] 🟩 WAL 🔥
+- [ ] 🟩 HASH MAP не весь а диапазоном
 - [x] ✅ add SegmentManager
 - [ ] 🟩 add CompactionManager 🔥 (add syntetic delay between files or record as settings when compaction)
 - [ ] 🟩 add/check eslint/prettier

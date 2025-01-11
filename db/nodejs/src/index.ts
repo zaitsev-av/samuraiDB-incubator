@@ -4,7 +4,7 @@ import { IndexManager } from './core/index-manager';
 
 const fileAdapter = new FileAdapter(__dirname + '/samuraidb.txt');
 const indexManager = new IndexManager(fileAdapter)
-const samuraiDB = new SamuraiDB(fileAdapter, indexManager);
+const samuraiDB = new SamuraiDB(fileAdapter, indexManager, compactionManager);
 
 
 async function seedDB() {
