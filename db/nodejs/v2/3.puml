@@ -1,0 +1,10 @@
+@startuml
+actor System
+System -> LevelCompactor: scheduleCompaction()
+activate LevelCompactor
+LevelCompactor -> SStable: collectSStablesForCompaction()
+LevelCompactor -> SStable: mergeAndCompact()
+LevelCompactor -> SStable: writeNewSStable()
+LevelCompactor -> SStable: removeOldSStables()
+deactivate LevelCompactor
+@enduml

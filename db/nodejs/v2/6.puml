@@ -1,0 +1,19 @@
+@startuml
+class WalManager {
+  +appendRecord(key, value)
+  +flush()
+  +recover()
+}
+
+class KeyValueStore {
+  -memTable: MemTable
+  -sstables: List<SStable>
+  -compactor: LevelCompactor
+  -walManager: WalManager
+  +put(key, value)
+  +get(key)
+}
+
+KeyValueStore --> WalManager
+
+@enduml

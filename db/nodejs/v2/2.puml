@@ -1,0 +1,16 @@
+@startuml
+actor Client
+Client -> KeyValueStore: put(key, value)
+activate KeyValueStore
+KeyValueStore -> MemTable: put(key, value)
+activate MemTable
+MemTable -> IMemTableStructure: insert(key, value)
+deactivate MemTable
+
+MemTable -> KeyValueStore: needsFlush()?
+KeyValueStore -> MemTable: flush()
+MemTable -> SStable: write(data)
+deactivate KeyValueStore
+deactivate MemTable
+deactivate SStable
+@enduml

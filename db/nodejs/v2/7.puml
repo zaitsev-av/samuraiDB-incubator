@@ -1,0 +1,12 @@
+@startuml
+actor Client
+Client -> KeyValueStore: put(key, value)
+activate KeyValueStore
+KeyValueStore -> WalManager: appendRecord(key, value)
+KeyValueStore -> MemTable: put(key, value)
+MemTable -> IMemTableStructure: insert(key, value)
+KeyValueStore -> MemTable: flushIfNeeded()
+MemTable -> WalManager: flush()
+MemTable -> SStable: write(data)
+KeyValueStore -> LevelCompactor: scheduleCompaction()
+@enduml

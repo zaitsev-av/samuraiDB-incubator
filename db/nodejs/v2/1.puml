@@ -1,0 +1,43 @@
+@startuml
+interface IMemTableStructure {
+  +insert(key, value)
+  +search(key)
+  +remove(key)
+}
+
+class AvlTreeMemTable implements IMemTableStructure
+class RedBlackTreeMemTable implements IMemTableStructure
+
+class MemTable {
+  -structure: IMemTableStructure
+  +MemTable(IMemTableStructure)
+  +put(key, value)
+  +get(key)
+  +flush()
+}
+
+class SStable {
+  +read(key)
+  +write(data)
+}
+
+class LevelCompactor {
+  +compact(sstables)
+}
+
+class KeyValueStore {
+  -memTable: MemTable
+  -sstables: List<SStable>
+  -compactor: LevelCompactor
+  +put(key, value)
+  +get(key)
+}
+
+KeyValueStore --> MemTable
+KeyValueStore --> "0..*" SStable
+KeyValueStore --> LevelCompactor
+MemTable --> IMemTableStructure
+MemTable ..> AvlTreeMemTable
+MemTable ..> RedBlackTreeMemTable
+LevelCompactor --> SStable
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+class LevelCompactor {
+  -levels: List<Level>
+  -strategy: ICompactionStrategy
+  -fileManager: FileManager
+  +scheduleCompaction(levelIndex)
+  +compactLevel(levelIndex)
+  +moveSSTablesToNextLevel(currentLevel, nextLevel)
+}
+
+interface ICompactionStrategy {
+  +selectSSTablesForCompaction(level: Level): List<SstableFile>
+  +calculateOverlap(files: List<SstableFile>, nextLevel: Level): List<SstableFile>
+}
+
+class SizeTieredCompactionStrategy implements ICompactionStrategy
+class Level {
+  -index: int
+  -files: List<SstableFile>
+  +addFile(file: SstableFile)
+  +removeFiles(files: List<SstableFile>)
+}
+
+class SstableFile {
+  -filename: String
+  -minKey: String
+  -maxKey: String
+  +read()
+  +write()
+}
+
+class FileManager {
+  +createNewFile()
+  +deleteFile(filename: String)
+  +moveFileToLevel(file: SstableFile, levelIndex: int)
+}
+
+LevelCompactor --> ICompactionStrategy
+LevelCompactor --> FileManager
+ICompactionStrategy --|> SizeTieredCompactionStrategy
+LevelCompactor --> "1..*" Level
+Level --> "0..*" SstableFile
+@enduml

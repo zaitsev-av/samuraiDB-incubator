@@ -1,0 +1,29 @@
+@startuml
+actor System
+System -> LevelCompactor: scheduleCompaction(levelIndex)
+activate LevelCompactor
+LevelCompactor -> LevelCompactor: compactLevel(levelIndex)
+activate LevelCompactor
+
+LevelCompactor -> ICompactionStrategy: selectSSTablesForCompaction(level)
+activate ICompactionStrategy
+ICompactionStrategy --> LevelCompactor: List<SstableFile>
+deactivate ICompactionStrategy
+
+LevelCompactor -> ICompactionStrategy: calculateOverlap(selectedFiles, nextLevel)
+activate ICompactionStrategy
+ICompactionStrategy --> LevelCompactor: overlappingFiles
+deactivate ICompactionStrategy
+
+LevelCompactor -> FileManager: createNewFile()
+activate FileManager
+FileManager --> LevelCompactor: newFile
+deactivate FileManager
+
+LevelCompactor -> SstableFile: mergeAllSelectedAndOverlap()
+LevelCompactor -> FileManager: write(mergedData)
+LevelCompactor -> Level: removeFiles(selectedFiles + overlappingFiles)
+LevelCompactor -> LevelCompactor: moveSSTablesToNextLevel(currentLevel, nextLevel)
+LevelCompactor -> FileManager: deleteFile(oldFileNames)
+deactivate LevelCompactor
+@enduml
