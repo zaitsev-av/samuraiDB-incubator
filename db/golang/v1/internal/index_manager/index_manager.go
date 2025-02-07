@@ -3,7 +3,8 @@ package indexmanager
 import (
 	"encoding/json"
 	"log"
-	fa "samurai-db/internal/file_adapter"
+
+	fa "samurai-db/v1/internal/file_adapter"
 )
 
 type Index struct {
