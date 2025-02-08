@@ -1,8 +1,8 @@
 @startuml
 interface IMemTableStructure {
-  +insert(key, value)
-  +search(key)
-  +remove(key)
+  +insert(value)
+  +find(value)
+  +delete(key)
 }
 
 class AvlTreeMemTable implements IMemTableStructure
