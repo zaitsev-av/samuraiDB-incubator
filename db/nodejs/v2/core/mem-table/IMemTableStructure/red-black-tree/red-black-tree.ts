@@ -1,4 +1,4 @@
-import {IMemTableStructure} from "./i-mem-table-structure";
+import {IMemTableStructure} from "../i-mem-table-structure";
 
 export enum Color {
     RED = "RED",
@@ -9,14 +9,16 @@ export interface Comparable {
     compare(other: this): number;
 }
 
-export class TreeNode<T extends Comparable> {
-    value: T;
+export class TreeNode<TKey, TValue> {
+    key: TKey;
+    value: TValue;
     color: Color;
-    left: TreeNode<T> | null;
-    right: TreeNode<T> | null;
-    parent: TreeNode<T> | null;
+    left: TreeNode<TKey, TValue> | null;
+    right: TreeNode<TKey, TValue> | null;
+    parent: TreeNode<TKey, TValue> | null;
 
-    constructor(value: T, color: Color = Color.RED, parent: TreeNode<T> | null = null) {
+    constructor(key: TKey, value: TValue, color: Color = Color.RED, parent: TreeNode<TKey, TValue> | null = null) {
+        this.key = key;
         this.value = value;
         this.color = color;
         this.left = null;
@@ -25,10 +27,10 @@ export class TreeNode<T extends Comparable> {
     }
 }
 
-export class RedBlackTree<T extends Comparable>  implements IMemTableStructure<T>  {
-    private root: TreeNode<T> | null = null;
+export class RedBlackTree<TKey, TValue> implements IMemTableStructure<TKey, TValue> {
+    private root: TreeNode<TKey, TValue> | null = null;
 
-    private rotateLeft(node: TreeNode<T>): void {
+    private rotateLeft(node: TreeNode<TKey, TValue>): void {
         const rightChild = node.right;
         if (!rightChild) return;
 
@@ -48,7 +50,7 @@ export class RedBlackTree<T extends Comparable>  implements IMemTableStructure<T
         node.parent = rightChild;
     }
 
-    private rotateRight(node: TreeNode<T>): void {
+    private rotateRight(node: TreeNode<TKey, TValue>): void {
         const leftChild = node.left;
         if (!leftChild) return;
 
@@ -68,7 +70,7 @@ export class RedBlackTree<T extends Comparable>  implements IMemTableStructure<T
         node.parent = leftChild;
     }
 
-    private fixInsertion(node: TreeNode<T>): void {
+    private fixInsertion(node: TreeNode<TKey, TValue>): void {
         while (node.parent && node.parent.color === Color.RED) {
             const grandparent = node.parent.parent;
             if (!grandparent) break;
@@ -110,21 +112,30 @@ export class RedBlackTree<T extends Comparable>  implements IMemTableStructure<T
         this.root!.color = Color.BLACK;
     }
 
-    insert(value: T): void {
+    insert(key: TKey, value: TValue): void {
         if (!this.root) {
-            this.root = new TreeNode(value, Color.BLACK);
+            this.root = new TreeNode(key, value, Color.BLACK);
             return;
         }
 
-        let parent: TreeNode<T> | null = null;
-        let current: TreeNode<T> | null = this.root;
+        let parent: TreeNode<TKey, TValue> | null = null;
+        let current: TreeNode<TKey, TValue> | null = this.root;
+
         while (current) {
             parent = current;
-            current = value.compare(current.value) < 0 ? current.left : current.right;
+            if (key < current.key) {
+                current = current.left;
+            } else if (key > current.key) {
+                current = current.right;
+            } else {
+                // If key already exists, update value
+                current.value = value;
+                return;
+            }
         }
 
-        const newNode = new TreeNode(value, Color.RED, parent);
-        if (value.compare(parent!.value) < 0) {
+        const newNode = new TreeNode(key, value, Color.RED, parent);
+        if (key < parent!.key) {
             parent!.left = newNode;
         } else {
             parent!.right = newNode;
@@ -133,13 +144,13 @@ export class RedBlackTree<T extends Comparable>  implements IMemTableStructure<T
         this.fixInsertion(newNode);
     }
 
-    delete(value: T): void {
-        let node = this.findNode(value);
+    delete(key: TKey): void {
+        const node = this.findNode(key);
         if (!node) return;
 
         let y = node;
         let yOriginalColor = y.color;
-        let x: TreeNode<T> | null;
+        let x: TreeNode<TKey, TValue> | null;
 
         if (!node.left) {
             x = node.right;
@@ -171,7 +182,7 @@ export class RedBlackTree<T extends Comparable>  implements IMemTableStructure<T
         }
     }
 
-    private transplant(u: TreeNode<T>, v: TreeNode<T> | null): void {
+    private transplant(u: TreeNode<TKey, TValue>, v: TreeNode<TKey, TValue> | null): void {
         if (!u.parent) {
             this.root = v;
         } else if (u === u.parent.left) {
@@ -182,7 +193,7 @@ export class RedBlackTree<T extends Comparable>  implements IMemTableStructure<T
         if (v) v.parent = u.parent;
     }
 
-    private fixDeletion(x: TreeNode<T>): void {
+    private fixDeletion(x: TreeNode<TKey, TValue>): void {
         while (x !== this.root && x.color === Color.BLACK) {
             if (x === x.parent!.left) {
                 let w = x.parent!.right!;
@@ -192,19 +203,20 @@ export class RedBlackTree<T extends Comparable>  implements IMemTableStructure<T
                     this.rotateLeft(x.parent!);
                     w = x.parent!.right!;
                 }
-                if (w.left!.color === Color.BLACK && w.right!.color === Color.BLACK) {
+                if ((!w.left || w.left.color === Color.BLACK) &&
+                    (!w.right || w.right.color === Color.BLACK)) {
                     w.color = Color.RED;
                     x = x.parent!;
                 } else {
-                    if (w.right!.color === Color.BLACK) {
-                        w.left!.color = Color.BLACK;
+                    if (!w.right || w.right.color === Color.BLACK) {
+                        if (w.left) w.left.color = Color.BLACK;
                         w.color = Color.RED;
                         this.rotateRight(w);
                         w = x.parent!.right!;
                     }
                     w.color = x.parent!.color;
                     x.parent!.color = Color.BLACK;
-                    w.right!.color = Color.BLACK;
+                    if (w.right) w.right.color = Color.BLACK;
                     this.rotateLeft(x.parent!);
                     x = this.root!;
                 }
@@ -216,19 +228,20 @@ export class RedBlackTree<T extends Comparable>  implements IMemTableStructure<T
                     this.rotateRight(x.parent!);
                     w = x.parent!.left!;
                 }
-                if (w.right!.color === Color.BLACK && w.left!.color === Color.BLACK) {
+                if ((!w.right || w.right.color === Color.BLACK) &&
+                    (!w.left || w.left.color === Color.BLACK)) {
                     w.color = Color.RED;
                     x = x.parent!;
                 } else {
-                    if (w.left!.color === Color.BLACK) {
-                        w.right!.color = Color.BLACK;
+                    if (!w.left || w.left.color === Color.BLACK) {
+                        if (w.right) w.right.color = Color.BLACK;
                         w.color = Color.RED;
                         this.rotateLeft(w);
                         w = x.parent!.left!;
                     }
                     w.color = x.parent!.color;
                     x.parent!.color = Color.BLACK;
-                    w.left!.color = Color.BLACK;
+                    if (w.left) w.left.color = Color.BLACK;
                     this.rotateRight(x.parent!);
                     x = this.root!;
                 }
@@ -237,22 +250,31 @@ export class RedBlackTree<T extends Comparable>  implements IMemTableStructure<T
         x.color = Color.BLACK;
     }
 
-    private minimum(node: TreeNode<T>): TreeNode<T> {
-        while (node.left) node = node.left;
-        return node;
+    private minimum(node: TreeNode<TKey, TValue>): TreeNode<TKey, TValue> {
+        let current = node;
+        while (current.left) current = current.left;
+        return current;
     }
 
-    public findNode(value: T): TreeNode<T> | null {
+    public findNode(key: TKey): TreeNode<TKey, TValue> | null {
         let current = this.root;
         while (current) {
-            const cmp = value.compare(current.value);
-            if (cmp === 0) return current;
-            current = cmp < 0 ? current.left : current.right;
+            if (key < current.key) {
+                current = current.left;
+            } else if (key > current.key) {
+                current = current.right;
+            } else {
+                return current;
+            }
         }
         return null;
     }
 
-    find(value: T): T | null {
-        return this.findNode(value)?.value
+    find(key: TKey): TValue | null {
+        const node = this.findNode(key);
+        return node ? node.value : null;
     }
 }
+
+
+//   node: {key, value: T}
