@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - 'db/golang/**'
+      - 'db/golang/v1/**'
       - '.github/workflows/**'
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
 
       - name: Build statictest binary
         run: |
-          cd db/golang
+          cd db/golang/v1
           go generate ./...
           go build -o ./bin/statictest ./pkg/statictest/main.go
 
@@ -29,7 +29,7 @@ jobs:
 
       - name: Run statictest
         run: |
-          cd db/golang
+          cd db/golang/v1
           go vet -vettool=$(which statictest) ./...
 
   test:
@@ -43,10 +43,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd db/golang
+          cd db/golang/v1
           go mod download
 
       - name: Run tests
         run: |
-          cd db/golang
+          cd db/golang/v1
           go test ./...
