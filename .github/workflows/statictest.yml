@@ -19,6 +19,12 @@ jobs:
       - name: Build statictest binary
         run: |
           cd db/golang/v1
+          go get github.com/jingyugao/rowserrcheck/passes/rowserr
+          go get github.com/timakin/bodyclose/passes/bodyclose
+          go get golang.org/x/tools/go/analysis
+          go get honnef.co/go/tools/simple
+          go get honnef.co/go/tools/staticcheck
+          go get honnef.co/go/tools/stylecheck
           go generate ./...
           go build -o ./bin/statictest ./pkg/statictest/main.go
 
