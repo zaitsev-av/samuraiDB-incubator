@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'db/golang/v1/**'
+      - 'db/golang/v2/**'
       - '.github/workflows/**'
 
 jobs:
@@ -15,6 +16,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Build statictest binary
         run: |
@@ -33,7 +36,7 @@ jobs:
           chmod +x $GITHUB_WORKSPACE/db/golang/v1/bin/statictest
           mv $GITHUB_WORKSPACE/db/golang/v1/bin/statictest /usr/local/bin/statictest
 
-      - name: Run statictest
+      - name: Run statictest for v1
         run: |
           cd db/golang/v1
           go vet -vettool=$(which statictest) ./...
@@ -46,15 +49,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Install dependencies
         run: |
-          cd db/golang/v1
-          cd db/golang/v2
-          go mod download
+          go mod tidy && go mod download
+          (cd db/golang/v1 && go mod tidy && go mod download)
+          (cd db/golang/v2 && go mod tidy && go mod download)
 
-      - name: Run tests
-        run: |
-          cd db/golang/v1
-          cd db/golang/v2
-          go test ./...
+      - name: Run tests for v1
+        run: go test -v ./db/golang/v1/...
+
+      - name: Run tests for v2
+        run: go test -v ./db/golang/v2/...
