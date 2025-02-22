@@ -1,4 +1,4 @@
-package rb_tree
+package rbtree
 
 import (
 	"fmt"
@@ -60,15 +60,15 @@ func TestRBTree_InsertTree(t *testing.T) {
 
 		t.Log("Структура дерева после вставки узла 40: \n")
 		tree.Print()
-
+		parent := node40.parent
 		require.NotNil(t, node40)
 		require.Equal(t, 40, node40.key)
 		require.Equal(t, RED, node40.color, "Новый узел должен быть красного цвета", node40.color)
-		require.Equal(t, BLACK, node40.parent.color, "Родитель узла 40 должен быть черным", node40.parent.color)
+		require.Equal(t, BLACK, parent.color, "Родитель узла 40 должен быть черным", parent.color)
 		require.Equal(t, BLACK, tree.root.color, "Корень должен быть черным", tree.root.color)
-		require.Equal(t, RED, node40.parent.left.color, "Должен быть выполнен поворот и нода с ключом 20 должна стать ребенком ноды с ключом 30", node40.parent.left.color)
+		require.Equal(t, RED, parent.left.color, "Произойдет поворот и нода с ключом 20 станет ребенком ноды с ключом 30", parent.left.color)
 	})
-	//Проверка черной высоты как доп проверка
+	// Проверка черной высоты как доп проверка
 	t.Run("Проверка черной высоты", func(t *testing.T) {
 		err := checkRBInvariants(tree)
 		require.NoError(t, err, "Дерево нарушает инварианты красно-чёрного дерева")
@@ -115,7 +115,7 @@ func TestRBTree_fixInsert(t *testing.T) {
 
 	t.Run("Должен произойти левый поворот, а затем правый поворот", func(t *testing.T) {
 		tree, _, _, newNode := createLeftRotateTree()
-		//сценарий когда родитель слева от корня, а новая нода правый ребенок
+		// сценарий когда родитель слева от корня, а новая нода правый ребенок
 		t.Log("Структура дерева после балансировкой: \n")
 		tree.Print()
 
@@ -136,7 +136,7 @@ func TestRBTree_fixInsert(t *testing.T) {
 	})
 
 	t.Run("Должен произойти правый поворот, а затем левый поворот", func(t *testing.T) {
-		//Родитель справа от корня, новая нода – левый ребёнок родителя
+		// Родитель справа от корня, новая нода – левый ребёнок родителя
 		tree, _, _, newNode := createRightRotateTree()
 		t.Log("Структура дерева перед балансировкой: \n")
 		tree.Print()
@@ -273,7 +273,7 @@ func TestRBTree_Delete(t *testing.T) {
 
 	t.Run("Последовательное удаление узлов", func(t *testing.T) {
 		tree := createLongTree()
-		//удаляем несколько узлов по одному.
+		// удаляем несколько узлов по одному.
 		for _, key := range []int{1, 5, 9, 13, 17} {
 			tree.Delete(key)
 			t.Log("После удаления \n")
@@ -294,7 +294,7 @@ func BenchmarkRBTree_InsertTree(b *testing.B) {
 
 func BenchmarkRBTree_Find(b *testing.B) {
 	tree := New[int, string]()
-	for i := 0; i < 10000; i++ {
+	for i := range [10000]struct{}{} {
 		tree.InsertTree(i, fmt.Sprintf("data %d", i))
 	}
 	b.ResetTimer()
@@ -306,15 +306,15 @@ func BenchmarkRBTree_Find(b *testing.B) {
 }
 
 // В тесте при измерениях аллоцируется на каждую итерацию новое дерево,
-// поэтому цифра 10001 allocs/op это нормально
+// поэтому цифра 10001 allocs/op это нормально.
 func BenchmarkRBTree_Delete_Only(b *testing.B) {
 	// Предварительно создаем дерево с 10000 узлов
 	tree := New[int, string]()
-	for j := 0; j < 10000; j++ {
+	for j := range [10000]struct{}{} {
 		tree.InsertTree(j, fmt.Sprintf("data %d", j))
 	}
 	keys := make([]int, 10000)
-	for i := 0; i < 10000; i++ {
+	for i := range [10000]struct{}{} {
 		keys[i] = i
 	}
 	b.ResetTimer()
@@ -327,16 +327,16 @@ func BenchmarkRBTree_Delete_Only(b *testing.B) {
 	}
 }
 
-// Более чистый бенчмарк для удаления без аллокаций на каждой итерации
+// Более чистый бенчмарк для удаления без аллокаций на каждой итерации.
 func BenchmarkRBTree_Delete_Sequential(b *testing.B) {
 	numNodes := 10000
 	tree := New[int, string]()
-	for j := 0; j < numNodes; j++ {
+	for j := range [10000]struct{}{} {
 		tree.InsertTree(j, fmt.Sprintf("data %d", j))
 	}
 
 	keys := make([]int, numNodes-1)
-	for i := 0; i < numNodes-1; i++ {
+	for i := range [10000]struct{}{} {
 		keys[i] = i
 	}
 
@@ -354,11 +354,11 @@ func BenchmarkRBTree_Delete_Sequential(b *testing.B) {
 	}
 }
 
-// Более чистый бенчмарк для удаления, но в обратном порядке, без аллокаций на каждой итерации
+// Более чистый бенчмарк для удаления, но в обратном порядке, без аллокаций на каждой итерации.
 func BenchmarkRBTree_Delete_Reverse(b *testing.B) {
 	numNodes := 10000
 	tree := New[int, string]()
-	for j := 0; j < numNodes; j++ {
+	for j := range [10000]struct{}{} {
 		tree.InsertTree(j, fmt.Sprintf("data %d", j))
 	}
 

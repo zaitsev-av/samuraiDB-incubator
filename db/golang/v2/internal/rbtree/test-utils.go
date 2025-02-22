@@ -1,4 +1,4 @@
-package rb_tree
+package rbtree
 
 import (
 	"cmp"
@@ -63,7 +63,7 @@ func createLeftRotateTree() (tree *RBTree[int, string], root, parent, node *Node
 		node = createNewTestNode(7, "data-7", RED, parent)
 		parent.right = node
 	})
-	return
+	return tree, root, parent, node
 }
 
 func createRightRotateTree() (tree *RBTree[int, string], root, parent, node *Node[int, string]) {
@@ -111,7 +111,7 @@ func checkRBInvariants(tree *RBTree[int, string]) error {
 	return nil
 }
 
-// checkNoConsecutiveReds проверяет, что нет двух подряд красных узлов
+// checkNoConsecutiveReds проверяет, что нет двух подряд красных узлов.
 func checkNoConsecutiveReds(node *Node[int, string]) error {
 	if node == nil {
 		return nil
@@ -158,7 +158,7 @@ func checkBlackHeight(node *Node[int, string], currentBlackCount int, reference 
 }
 
 // cloneTree и cloneNode нужны для бенчмарков, чтобы убрать подсчет в бенчмаркох алокаций на создание дерева,
-// а считать только алокации при удалении
+// а считать только алокации при удалении.
 func cloneTree[K cmp.Ordered, V any](tree *RBTree[K, V]) *RBTree[K, V] {
 	newTree := New[K, V]()
 	newTree.root = cloneNode(tree.root, nil)

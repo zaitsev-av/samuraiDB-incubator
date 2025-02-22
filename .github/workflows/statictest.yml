@@ -50,9 +50,11 @@ jobs:
       - name: Install dependencies
         run: |
           cd db/golang/v1
+          cd db/golang/v2
           go mod download
 
       - name: Run tests
         run: |
           cd db/golang/v1
+          cd db/golang/v2
           go test ./...

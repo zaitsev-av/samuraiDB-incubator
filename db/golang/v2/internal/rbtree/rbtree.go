@@ -1,4 +1,4 @@
-package rb_tree
+package rbtree
 
 import (
 	"cmp"
@@ -47,7 +47,7 @@ func (t *RBTree[K, D]) InsertTree(key K, data D) *Node[K, D] {
 	var parent *Node[K, D]
 	for {
 		if current == nil {
-			//create current node
+			// create current node
 			currentNode := &Node[K, D]{
 				key:    key,
 				data:   data,
@@ -64,7 +64,7 @@ func (t *RBTree[K, D]) InsertTree(key K, data D) *Node[K, D] {
 			if key < parent.key {
 				parent.left = currentNode
 			}
-			//похоже в этот момент нужно будет проводить балансировку
+			// похоже в этот момент нужно будет проводить балансировку
 			t.fixInsert(currentNode)
 
 			return currentNode
@@ -108,22 +108,21 @@ func (t *RBTree[K, D]) fixInsert(currentNode *Node[K, D]) {
 			grandParent.color = RED
 			t.fixInsert(grandParent)
 			return
-		} else {
-			if parent == grandParent.left {
-				if currentNode == parent.right { //если текущая нода в правой ветке, то делаем левый поворот
-					t.rotateLeft(parent)
-					currentNode = parent
-					parent = currentNode.parent
-				}
-				t.rotateRight(grandParent) //иначе правый
-			} else {
-				if currentNode == parent.left { //если текущая нода в левой ветке, то делаем правый поворот
-					t.rotateRight(parent)
-					currentNode = parent
-					parent = currentNode.parent
-				}
-				t.rotateLeft(grandParent)
+		}
+		if parent == grandParent.left {
+			if currentNode == parent.right { // если текущая нода в правой ветке, то делаем левый поворот
+				t.rotateLeft(parent)
+				currentNode = parent
+				parent = currentNode.parent
 			}
+			t.rotateRight(grandParent) // иначе правый
+		} else {
+			if currentNode == parent.left { // если текущая нода в левой ветке, то делаем правый поворот
+				t.rotateRight(parent)
+				currentNode = parent
+				parent = currentNode.parent
+			}
+			t.rotateLeft(grandParent)
 		}
 		// случай когда не нужны повороты
 		parent.color = BLACK
@@ -144,11 +143,12 @@ func (t *RBTree[K, D]) rotateLeft(node *Node[K, D]) {
 	}
 
 	rightChild.parent = node.parent
-	if node.parent == nil {
+	switch {
+	case node.parent == nil:
 		t.root = rightChild
-	} else if node == node.parent.left {
+	case node == node.parent.left:
 		node.parent.left = rightChild
-	} else {
+	default:
 		node.parent.right = rightChild
 	}
 
@@ -168,11 +168,12 @@ func (t *RBTree[K, D]) rotateRight(node *Node[K, D]) {
 	}
 
 	leftChild.parent = node.parent
-	if node.parent == nil {
+	switch {
+	case node.parent == nil:
 		t.root = leftChild
-	} else if node == node.parent.right {
+	case node == node.parent.right:
 		node.parent.right = leftChild
-	} else {
+	default:
 		node.parent.left = leftChild
 	}
 
@@ -253,7 +254,7 @@ func (t *RBTree[K, D]) propagateFixup(deletedNode *Node[K, D]) {
 }
 
 // adjustRedSibling обрабатывает случай, когда "брат" (sibling) удалённого узла красный,
-// в этом случае происходит перекраска и поворот для поднятия проблемы выше по дереву
+// в этом случае происходит перекраска и поворот для поднятия проблемы выше по дереву.
 func (t *RBTree[K, D]) adjustRedSibling(deletedNode *Node[K, D]) {
 	sibling := deletedNode.findSibling()
 	if nodeColor(sibling) == RED {
@@ -299,7 +300,7 @@ func (t *RBTree[K, D]) adjustRedParent(deletedNode *Node[K, D]) {
 }
 
 // rotateSiblingForBalance обрабатывает случай, когда брат чёрный, а один из его детей красный,
-// что позволяет выполнить поворот и подготовить ситуацию для финальной балансировки
+// что позволяет выполнить поворот и подготовить ситуацию для финальной балансировки.
 func (t *RBTree[K, D]) rotateSiblingForBalance(deletedNode *Node[K, D]) {
 	sibling := deletedNode.findSibling()
 	if deletedNode == deletedNode.parent.left &&
@@ -321,7 +322,7 @@ func (t *RBTree[K, D]) rotateSiblingForBalance(deletedNode *Node[K, D]) {
 }
 
 // finalizeDeletionBalance выполняет окончательную корректировку, устанавливая цвета брата и родителя
-// и выполняет поворот для восстановления свойств красно-чёрного дерева
+// и выполняет поворот для восстановления свойств красно-чёрного дерева.
 func (t *RBTree[K, D]) finalizeDeletionBalance(deletedNode *Node[K, D]) {
 	sibling := deletedNode.findSibling()
 	sibling.color = nodeColor(deletedNode.parent)
@@ -360,22 +361,6 @@ func (t *RBTree[K, D]) replaceNode(oldNode, newNode *Node[K, D]) {
 	}
 }
 
-func (t *RBTree[K, D]) transplant(target, replacement *Node[K, D]) {
-	// кейс когда target корень
-	if target.parent == nil {
-		t.root = replacement
-		// определяем в каком узле происходит замена
-	} else if target.parent.left != target {
-		target.parent.right = replacement
-	} else {
-		target.parent.left = replacement
-	}
-	// обмен родителями
-	if replacement != nil {
-		replacement.parent = target.parent
-	}
-}
-
 func nodeColor[K cmp.Ordered, D any](node *Node[K, D]) Color {
 	if node == nil {
 		return BLACK
@@ -385,7 +370,7 @@ func nodeColor[K cmp.Ordered, D any](node *Node[K, D]) Color {
 
 func (t *RBTree[K, D]) Print() {
 	if t.root == nil {
-		fmt.Println("[Empty tree]")
+		fmt.Println("[Empty tree]") //nolint:forbidigo
 		return
 	}
 	t.printNode(t.root, "", true)
@@ -409,7 +394,7 @@ func (t *RBTree[K, D]) printNode(node *Node[K, D], prefix string, isTail bool) {
 	}
 
 	// Выводим текущий узел
-	fmt.Printf("%s%s%v(%s)-%v\n", prefix, pointers, node.key, color, node.data)
+	fmt.Printf("%s%s%v(%s)-%v\n", prefix, pointers, node.key, color, node.data) //nolint:forbidigo
 
 	// Вычисляем новый префикс для детей
 	newPrefix := prefix
