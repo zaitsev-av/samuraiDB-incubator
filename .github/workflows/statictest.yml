@@ -46,6 +46,13 @@ jobs:
     container:
       image: golang:1.23
 
+    strategy:
+      matrix:
+        version: [ v1, v2 ]
+      fail-fast: false
+
+    name: Test ${{ matrix.version }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -54,12 +61,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          go mod tidy && go mod download
-          (cd db/golang/v1 && go mod tidy && go mod download)
-          (cd db/golang/v2 && go mod tidy && go mod download)
+          cd db/golang/${{ matrix.version }}
+          go mod download
 
-      - name: Run tests for v1
-        run: go test -v ./db/golang/v1/...
-
-      - name: Run tests for v2
-        run: go test -v ./db/golang/v2/...
+      - name: Run tests
+        run: |
+            cd db/golang/${{ matrix.version }}
+            go test ./...
