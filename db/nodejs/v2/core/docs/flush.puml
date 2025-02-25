@@ -1,0 +1,28 @@
+@startuml
+class KeyValueStore {
+  -memTable: MemTable
+  -sstables: List<SStable>
+  -compactor: LevelCompactor
+  -walManager: WalManager
+  +put(key, value)
+  +get(key)
+  -checkFlushCondition()
+}
+
+class MemTable {
+  -structure: IMemTableStructure
+  -maxSize: int
+  -currentSize: int
+  +put(key, value)
+  +get(key)
+  +flush()
+  +isFull(): bool
+}
+
+KeyValueStore -> MemTable: put(key, value)
+KeyValueStore -> KeyValueStore: checkFlushCondition()
+KeyValueStore -> MemTable: flush()  # если isFull() == true
+MemTable -> WalManager: flush()
+MemTable -> SStable: write(data)
+KeyValueStore -> LevelCompactor: scheduleCompaction()
+@enduml
