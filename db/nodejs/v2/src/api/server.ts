@@ -2,15 +2,16 @@ import {createServer} from 'net';
 import {join} from 'path';
 import {MemTable} from "../core/mem-table/mem-table";
 import {RedBlackTree} from "../core/mem-table/IMemTableStructure/red-black-tree/red-black-tree";
-import {SamuraiDB} from "../core/samurai-db/samurai-d-b";
-import { randomUUID } from 'crypto';
-
+import {IntegerIdStratagy, SamuraiDB} from "../core/samurai-db/samurai-d-b";
+import {FileManager} from "../core/samurai-db/file-manager/file-manager";
 
 const dir = join(__dirname, '..', '..', 'db');
 
-const redBlackTree = new RedBlackTree();
-const memTable = new MemTable<string, any>(redBlackTree);
-const db = new SamuraiDB<string, any>(memTable);
+const redBlackTree = new RedBlackTree<number, any>();
+const memTable = new MemTable<number, any>(redBlackTree);
+const fileManager = new FileManager('data');
+const idStrategy = new IntegerIdStratagy();
+const db = new SamuraiDB<number, any>(memTable, fileManager, idStrategy);
 
 (async () => {
   //await db.init();
@@ -26,12 +27,15 @@ const server = createServer(async (socket) => {
 
     switch (requestAction.type) {
       case 'SET': {
-        const id = randomUUID();
-        await db.put(id, { ...requestAction.payload, id: id });
+        const {id} = requestAction.payload;
+
+        const entity = await db.set(id ?? null, { ...requestAction.payload });
+
         let response = {
-          ...requestAction.payload,
-          id,
-          uuid: requestAction.uuid,
+          payload: {
+            entity
+          },
+          requestId: requestAction.requestId,
         };
         console.log(JSON.stringify(response));
         socket.write(JSON.stringify(response));
@@ -40,8 +44,8 @@ const server = createServer(async (socket) => {
       case 'GET': {
         const data = await db.get(requestAction.payload.id);
         let response = {
-          ...data,
-          uuid: requestAction.uuid,
+          payload: data,
+          requestId: requestAction.requestId,
         };
         console.log('response: ', JSON.stringify(response));
         socket.write(JSON.stringify(response));
@@ -50,7 +54,7 @@ const server = createServer(async (socket) => {
       case 'DELETE': {
         const data = await db.delete(requestAction.payload.id);
         let response = {
-          uuid: requestAction.uuid,
+          requestId: requestAction.requestId,
         };
         console.log('response: ', JSON.stringify(response));
         socket.write(JSON.stringify(response));

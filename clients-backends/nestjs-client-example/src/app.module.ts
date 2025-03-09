@@ -10,7 +10,7 @@ import { ConfigModule } from '@nestjs/config';
     SamuraiDbModule.register({
       host: 'localhost',
       port: 4001,
-      maxRetries: 5,
+      maxRetries: 100,
       initialRetryInterval: 1000,
     }),
   ],

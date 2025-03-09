@@ -19,15 +19,15 @@ export class SamuraiDBDriver<T> {
       connection.client.on('data', (data) => {
         console.log('Received from server:', data.toString());
         const action = JSON.parse(data.toString());
-        this.requestsMap.get(action.uuid).resolve(action);
-        this.requestsMap.delete(action.uuid);
+        this.requestsMap.get(action.requestId).resolve(action.payload);
+        this.requestsMap.delete(action.requestId);
       });
     });
   }
 
   async getById(id: string): Promise<T> {
     const { promise, uuid } = this.registerRequest<T>();
-    const action = { type: 'GET', payload: { id: id }, uuid: uuid };
+    const action = { type: 'GET', payload: { id: id }, requestId: uuid };
     const jsonData = JSON.stringify(action);
     this.connection.client.write(jsonData + '\n');
     return promise;
@@ -43,20 +43,23 @@ export class SamuraiDBDriver<T> {
 
   async deleteById(id: string): Promise<void> {
     const { promise, uuid } = this.registerRequest<void>();
-    const action = { type: 'DELETE', payload: { id: id }, uuid: uuid };
+    const action = { type: 'DELETE', payload: { id: id }, requestId: uuid };
     this.connection.client.write(JSON.stringify(action) + '\n');
     return promise;
   }
 
-  async set<T extends { id: string }>(dto: Omit<T, 'id'>): Promise<T> {
+  async set<T>(dto: Omit<T, 'id'>): Promise<T> {
     const { promise, uuid } = this.registerRequest<T>();
-    const action = { type: 'SET', payload: { ...dto }, uuid: uuid };
+    const action = { type: 'SET', payload: { ...dto }, requestId: uuid };
     this.connection.client.write(JSON.stringify(action) + '\n');
     return promise;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async updateById<T>(id: string, dto: T): Promise<void> {
-    return Promise.resolve();
+  async updateById<T>(id: string, dto: Omit<T, 'id'>): Promise<T> {
+    const { promise, uuid } = this.registerRequest<T>();
+    const action = { type: 'SET', payload: { id, ...dto }, requestId: uuid };
+    this.connection.client.write(JSON.stringify(action) + '\n');
+    return promise;
   }
 }

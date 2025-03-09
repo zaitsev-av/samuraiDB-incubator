@@ -3,4 +3,7 @@ export interface IMemTableStructure<TKey, TValue> {
     insert(key: TKey, value: TValue): void
     delete(key: TKey): void
     print?(): void
+    getCount(): number
+    getSortedArray(): { key: TKey; value: TValue }[]
+    clear(): void
 }

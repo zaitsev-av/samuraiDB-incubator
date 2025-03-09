@@ -1,5 +1,5 @@
 export interface ISamuraiDB<TKey, TValue> {
-    put(key: TKey, value: TValue): void;
+    set(key: TKey, value: TValue): void;
 
     get(key: TKey): TValue | undefined;
 }

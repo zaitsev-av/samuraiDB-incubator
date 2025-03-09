@@ -25,7 +25,7 @@ export class SSTable {
         });
     }
 
-    flush(data: { key: string; value: string }[]): Promise<void> {
+    write(data: { key: string; value: string }[]): Promise<void> {
         return new Promise((resolve, reject) => {
             const dataStream = fs.createWriteStream(this.dataFilePath, { flags: "w" });
             const indexStream = fs.createWriteStream(this.indexFilePath, { flags: "w" });

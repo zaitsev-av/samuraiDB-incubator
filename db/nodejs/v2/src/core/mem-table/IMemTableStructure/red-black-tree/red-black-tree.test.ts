@@ -1,4 +1,5 @@
-import {Color, RedBlackTree} from "./red-black-tree";
+import {RedBlackTree} from "./red-black-tree";
+import {Color} from "./color";
 
 
 // We'll expose TreeNode type for testing purposes

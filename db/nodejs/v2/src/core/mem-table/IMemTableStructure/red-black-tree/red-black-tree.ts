@@ -1,34 +1,10 @@
 import {IMemTableStructure} from "../i-mem-table-structure";
+import {TreeNode} from "./tree-node";
+import {Color} from "./color";
 
-export enum Color {
-    RED = "RED",
-    BLACK = "BLACK"
-}
-
-export interface Comparable {
-    compare(other: this): number;
-}
-
-export class TreeNode<TKey, TValue> {
-    key: TKey;
-    value: TValue;
-    color: Color;
-    left: TreeNode<TKey, TValue> | null;
-    right: TreeNode<TKey, TValue> | null;
-    parent: TreeNode<TKey, TValue> | null;
-
-    constructor(key: TKey, value: TValue, color: Color = Color.RED, parent: TreeNode<TKey, TValue> | null = null) {
-        this.key = key;
-        this.value = value;
-        this.color = color;
-        this.left = null;
-        this.right = null;
-        this.parent = parent;
-    }
-}
-
-export class RedBlackTree<TKey, TValue> implements IMemTableStructure<TKey, TValue> {
+export class RedBlackTree<TKey = string, TValue = any> implements IMemTableStructure<TKey, TValue> {
     private root: TreeNode<TKey, TValue> | null = null;
+    private count = 0
 
     private rotateLeft(node: TreeNode<TKey, TValue>): void {
         const rightChild = node.right;
@@ -134,6 +110,7 @@ export class RedBlackTree<TKey, TValue> implements IMemTableStructure<TKey, TVal
             }
         }
 
+        this.count++;
         const newNode = new TreeNode(key, value, Color.RED, parent);
         if (key < parent!.key) {
             parent!.left = newNode;
@@ -149,6 +126,8 @@ export class RedBlackTree<TKey, TValue> implements IMemTableStructure<TKey, TVal
     delete(key: TKey): void {
         const node = this.findNode(key);
         if (!node) return;
+
+        this.count--;
 
         let y = node;
         let yOriginalColor = y.color;
@@ -309,5 +288,28 @@ export class RedBlackTree<TKey, TValue> implements IMemTableStructure<TKey, TVal
         if (this.root.right) {
             printNode(this.root.right, "", false);
         }
+    }
+
+    getCount() {
+        return this.count;
+    }
+
+    getSortedArray(): { key: TKey; value: TValue }[] {
+        const result: { key: TKey; value: TValue }[] = [];
+
+        const inOrderTraversal = (node: TreeNode<TKey, TValue> | null): void => {
+            if (!node) return;
+            inOrderTraversal(node.left);
+            result.push({ key: node.key, value: node.value });
+            inOrderTraversal(node.right);
+        };
+
+        inOrderTraversal(this.root);
+        return result;
+    }
+
+    clear() {
+        this.root = null;
+        this.count = 0;
     }
 }

@@ -33,7 +33,7 @@ describe("SSTable", () => {
             { key: "key3", value: "value3" },
         ];
 
-        await sstable.flush(data);
+        await sstable.write(data);
 
         expect(sstable.read("key1")).toBe("value1");
         expect(sstable.read("key2")).toBe("value2");
@@ -48,7 +48,7 @@ describe("SSTable", () => {
             { key: "keyB", value: "valueB" },
         ];
 
-        await initialSSTable.flush(data);
+        await initialSSTable.write(data);
 
         // Создаем новый SSTable-объект (эмулируя перезапуск)
         const newSSTable = new SSTable(TEST_DIR, TEST_FILE);
@@ -60,7 +60,7 @@ describe("SSTable", () => {
 
     test("should delete files correctly", async () => {
         const sstable = new SSTable(TEST_DIR, TEST_FILE);
-        await sstable.flush([{ key: "k1", value: "v1" }]);
+        await sstable.write([{ key: "k1", value: "v1" }]);
 
         expect(fs.existsSync(path.join(TEST_DIR, `${TEST_FILE}.sst`))).toBe(true);
         expect(fs.existsSync(path.join(TEST_DIR, `${TEST_FILE}.idx`))).toBe(true);

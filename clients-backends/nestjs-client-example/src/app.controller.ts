@@ -1,13 +1,21 @@
-import {Body, Controller, Delete, Get, Param, Post, Put} from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { AppService } from './app.service';
-import {SamuraiDBDriver} from "./samurai-db/samurai-db-driver";
-import {ApiBody, ApiOperation, ApiParam, ApiProperty} from "@nestjs/swagger";
+import { SamuraiDBDriver } from './samurai-db/samurai-db-driver';
+import { ApiBody, ApiOperation, ApiParam, ApiProperty } from '@nestjs/swagger';
 
-export class SamuraiCharacter {
-  @ApiProperty({ example: '123', description: 'Unique identifier for the Samurai' })
-  id: string;
-
-  @ApiProperty({ example: 'Miyamoto Musashi', description: 'Name of the Samurai' })
+export class SamuraiUpdateCreateDTO {
+  @ApiProperty({
+    example: 'Miyamoto Musashi',
+    description: 'Name of the Samurai',
+  })
   name: string;
 
   @ApiProperty({ example: 100, description: 'Health points of the Samurai' })
@@ -23,30 +31,43 @@ export class SamuraiCharacter {
   weapon: string;
 }
 
+export class SamuraiEntity extends SamuraiUpdateCreateDTO {
+  @ApiProperty({
+    example: '123',
+    description: 'Unique identifier for the Samurai',
+  })
+  id: string;
+}
+
 @Controller('samurais')
 export class AppController {
-  constructor(private readonly samuraiDBDriver: SamuraiDBDriver<SamuraiCharacter>) {}
+  constructor(
+    private readonly samuraiDBDriver: SamuraiDBDriver<SamuraiEntity>,
+  ) {}
 
   @ApiOperation({ summary: 'Get Samurai by ID' })
   @ApiParam({ name: 'id', required: true, description: 'Samurai ID' })
   @Get(':id')
-  async getById(@Param('id') id: string): Promise<SamuraiCharacter> {
+  async getById(@Param('id') id: string): Promise<SamuraiEntity> {
     return this.samuraiDBDriver.getById(id);
   }
 
   @ApiOperation({ summary: 'Create new Samurai' })
-  @ApiBody({ type: SamuraiCharacter })
+  @ApiBody({ type: SamuraiUpdateCreateDTO })
   @Post()
-  async create(@Body() dto: SamuraiCharacter): Promise<SamuraiCharacter & {id: string}> {
-    const result = await this.samuraiDBDriver.set<SamuraiCharacter & {id: string}>(dto);
+  async create(@Body() dto: SamuraiUpdateCreateDTO): Promise<SamuraiEntity> {
+    const result = await this.samuraiDBDriver.set<SamuraiEntity>(dto);
     return result;
   }
 
   @ApiOperation({ summary: 'Update Samurai by ID' })
   @ApiParam({ name: 'id', required: true, description: 'Samurai ID' })
-  @ApiBody({ type: SamuraiCharacter })
+  @ApiBody({ type: SamuraiUpdateCreateDTO })
   @Put(':id')
-  async update(@Param('id') id: string, @Body() dto: SamuraiCharacter): Promise<void> {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: SamuraiUpdateCreateDTO,
+  ): Promise<SamuraiEntity> {
     return this.samuraiDBDriver.updateById(id, dto);
   }
 

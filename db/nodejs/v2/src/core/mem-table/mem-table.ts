@@ -1,5 +1,6 @@
 import {IMemTable} from "./i-mem-table";
 import {IMemTableStructure} from "./IMemTableStructure/i-mem-table-structure";
+import {SSTable} from "../sstable/sstable";
 
 export class MemTable<TKey, TValue> implements IMemTable<TKey, TValue> {
     private structure: IMemTableStructure<TKey, TValue>;
@@ -8,7 +9,7 @@ export class MemTable<TKey, TValue> implements IMemTable<TKey, TValue> {
         this.structure = structure;
     }
 
-    public put(key: TKey, value: TValue): void {
+    public set(key: TKey, value: TValue): void {
         this.structure.insert(key, value);
     }
 
@@ -19,5 +20,20 @@ export class MemTable<TKey, TValue> implements IMemTable<TKey, TValue> {
     public get(key: TKey): TValue | undefined {
         const found = this.structure.find(key);
         return found || undefined;
+    }
+
+    public isFull(): boolean {
+         return this.structure.getCount() > 5;
+    }
+
+    public async flush(ssTable: SSTable): Promise<void> {
+        const data = this.structure.getSortedArray()
+            .map(item => ({
+                key: item.key as string, // todo: need to make stringify??
+                value: JSON.stringify(item.value)
+            }));
+        await ssTable.write(data);
+
+        this.structure.clear();
     }
 }

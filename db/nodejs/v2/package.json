@@ -4,9 +4,9 @@
   "main": "src/index.ts",
   "scripts": {
     "test": "jest",
-    "start:debug-start": "nodemon --inspect-brk ./api/server.ts",
-    "start:debug": "nodemon --debug ./api/server.ts",
-    "start:dev": "nodemon"
+    "start:debug": "nodemon --inspect-brk ./src/api/server.ts",
+    "debug": "nodemon --inspect ./src/api/server.ts",
+    "dev": "nodemon"
   },
   "author": "",
   "license": "ISC",
