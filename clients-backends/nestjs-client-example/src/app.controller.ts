@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -49,7 +50,10 @@ export class AppController {
   @ApiParam({ name: 'id', required: true, description: 'Samurai ID' })
   @Get(':id')
   async getById(@Param('id') id: string): Promise<SamuraiEntity> {
-    return this.samuraiDBDriver.getById(id);
+    const item = await this.samuraiDBDriver.getById(id);
+    if (!item) throw new NotFoundException();
+
+    return item;
   }
 
   @ApiOperation({ summary: 'Create new Samurai' })

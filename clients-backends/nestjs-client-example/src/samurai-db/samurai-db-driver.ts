@@ -11,7 +11,7 @@ export class SamuraiDBDriver<T> {
 
   constructor(private readonly connection: SamuraiDBConnect) {
     connection.subscribeToEvents('reject', () => {
-      this.requestsMap.forEach((item) => item.reject('Connection lost'));
+      this.requestsMap.forEach((item) => item.reject('Connection lost ❌'));
       this.requestsMap = new Map();
     });
 

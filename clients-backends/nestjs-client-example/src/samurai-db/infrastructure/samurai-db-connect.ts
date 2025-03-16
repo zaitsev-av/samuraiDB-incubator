@@ -30,18 +30,18 @@ export class SamuraiDBConnect extends ConnectionService {
   private reconnect(err) {
     this.onReject();
 
-    console.error('Connection error:', err?.message);
+    console.error('❌ Connection error:', err?.message);
     this.status = 'CONNECTING';
     this.attempt++; // Увеличение счетчика попыток
 
     if (this.attempt <= this.options.maxRetries) {
       console.log(
-        `Attempt ${this.attempt} failed. Retrying in ${this.retryInterval / 1000}s...`,
+        `🫠 Attempt ${this.attempt} failed. Retrying in ${this.retryInterval / 1000}s...`,
       );
       setTimeout(() => this.connect(), this.retryInterval);
       this.updateRetryInterval();
     } else {
-      console.error('Max retries reached. Please check the server.');
+      console.error('☠️ Max retries reached. Please check the server.');
     }
   }
 
@@ -49,7 +49,7 @@ export class SamuraiDBConnect extends ConnectionService {
     this.client = createConnection(
       { host: this.options.host, port: this.options.port },
       () => {
-        console.log('Connected to server');
+        console.log('✅ Connected to server');
         this.status = 'CONNECTED';
         this.retryInterval = this.options.interval; // Сброс интервала при успешном подключении
         this.attempt = 0; // Сброс счетчика попыток при успешном подключении

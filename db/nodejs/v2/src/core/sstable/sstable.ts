@@ -1,17 +1,27 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as readline from "readline";
+
+export type MetaDataType = {
+    minId: string
+    maxId: string
+}
 
 export class SSTable {
     private dataFilePath: string;
     private indexFilePath: string;
+    public metaData: MetaDataType;
     private index: Map<string, number>;
 
     constructor(directory: string, fileName: string) {
         this.dataFilePath = path.join(directory, `${fileName}.sst`);
         this.indexFilePath = path.join(directory, `${fileName}.idx`);
         this.index = new Map();
+    }
 
-        this.loadIndex();
+    async init() {
+        await this.loadIndex();
+        await this.loadMetadata();
     }
 
     private loadIndex(): void {
@@ -25,12 +35,35 @@ export class SSTable {
         });
     }
 
-    write(data: { key: string; value: string }[]): Promise<void> {
+    private async loadMetadata(): Promise<void> {
+        const stream = fs.createReadStream(this.dataFilePath, { start: 0, encoding: "utf-8" });
+        const rl = readline.createInterface({ input: stream });
+
+        const promise = new Promise<MetaDataType>((resolve) => {
+            rl.once("line", (line) => {
+                rl.close();
+                stream.destroy(); // Close the stream properly
+                const [storedKey, storedValue] = line.split(/:(.+)/);
+                resolve(JSON.parse(storedValue));
+            });
+
+            rl.once("error", () => resolve(null)); // Handle potential stream errors
+            stream.once("error", () => resolve(null)); // Handle stream errors
+        });
+
+        this.metaData = await promise;
+    }
+
+    write(metadata: any, data: { key: string; value: string }[]): Promise<void> {
         return new Promise((resolve, reject) => {
             const dataStream = fs.createWriteStream(this.dataFilePath, { flags: "w" });
             const indexStream = fs.createWriteStream(this.indexFilePath, { flags: "w" });
 
-            let position = 0; // Отслеживаем смещение вручную
+
+            let metadataLine = `meta:${JSON.stringify(metadata)}\n`;
+            dataStream.write(metadataLine);
+
+            let position = Buffer.byteLength(metadataLine, "utf-8"); // Отслеживаем смещение вручную
 
             data.forEach(({ key, value }) => {
                 const line = `${key}:${value}\n`;
@@ -38,7 +71,7 @@ export class SSTable {
                 dataStream.write(line);
                 indexStream.write(`${key}:${position}\n`); // Записываем смещение в индекс-файл
 
-                this.index.set(key, position); // Записываем смещение в память
+                this.index.set(key.toString(), position); // Записываем смещение в память
 
                 position += Buffer.byteLength(line, "utf-8"); // Обновляем смещение
             });
@@ -58,20 +91,25 @@ export class SSTable {
         });
     }
 
-    read(key: string): string | null {
-        if (!this.index.has(key)) return null;
+    read(key: string): Promise<string | null> {
+        if (!this.index.has(key)) return Promise.resolve(null);
 
         const position = this.index.get(key)!;
-        const fd = fs.openSync(this.dataFilePath, "r");
-        const buffer = Buffer.alloc(1024);
+        const stream = fs.createReadStream(this.dataFilePath, { start: position, encoding: "utf-8" });
+        const rl = readline.createInterface({ input: stream });
 
-        const bytesRead = fs.readSync(fd, buffer, 0, buffer.length, position);
-        fs.closeSync(fd);
+        return new Promise((resolve) => {
+            rl.once("line", (line) => {
+                rl.close();
+                stream.destroy(); // Close the stream properly
 
-        if (bytesRead === 0) return null;
+                const [storedKey, storedValue] = line.split(/:(.+)/);
+                resolve(storedValue ? JSON.parse(storedValue) : null);
+            });
 
-        const line = buffer.toString("utf-8", 0, bytesRead).split("\n")[0];
-        return line.includes(":") ? line.split(":")[1] : null;
+            rl.once("error", () => resolve(null)); // Handle potential stream errors
+            stream.once("error", () => resolve(null)); // Handle stream errors
+        });
     }
 
     delete(): void {

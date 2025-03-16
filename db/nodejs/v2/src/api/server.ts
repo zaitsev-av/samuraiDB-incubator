@@ -2,7 +2,7 @@ import {createServer} from 'net';
 import {join} from 'path';
 import {MemTable} from "../core/mem-table/mem-table";
 import {RedBlackTree} from "../core/mem-table/IMemTableStructure/red-black-tree/red-black-tree";
-import {IntegerIdStratagy, SamuraiDB} from "../core/samurai-db/samurai-d-b";
+import {IntegerIdStratagy, SamuraiDb, SSTablesManager} from "../core/samurai-db/samurai-db";
 import {FileManager} from "../core/samurai-db/file-manager/file-manager";
 
 const dir = join(__dirname, '..', '..', 'db');
@@ -11,10 +11,11 @@ const redBlackTree = new RedBlackTree<number, any>();
 const memTable = new MemTable<number, any>(redBlackTree);
 const fileManager = new FileManager('data');
 const idStrategy = new IntegerIdStratagy();
-const db = new SamuraiDB<number, any>(memTable, fileManager, idStrategy);
+const ssTablesManager = new SSTablesManager(fileManager, idStrategy);
+const db = new SamuraiDb<number, any>(memTable, fileManager, idStrategy, ssTablesManager);
 
 (async () => {
-  //await db.init();
+  await db.init();
 })();
 
 const server = createServer(async (socket) => {

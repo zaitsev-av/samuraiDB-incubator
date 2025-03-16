@@ -1,6 +1,6 @@
 import {IMemTable} from "./i-mem-table";
 import {IMemTableStructure} from "./IMemTableStructure/i-mem-table-structure";
-import {SSTable} from "../sstable/sstable";
+import {MetaDataType, SSTable} from "../sstable/sstable";
 
 export class MemTable<TKey, TValue> implements IMemTable<TKey, TValue> {
     private structure: IMemTableStructure<TKey, TValue>;
@@ -32,7 +32,15 @@ export class MemTable<TKey, TValue> implements IMemTable<TKey, TValue> {
                 key: item.key as string, // todo: need to make stringify??
                 value: JSON.stringify(item.value)
             }));
-        await ssTable.write(data);
+
+        const metadata: MetaDataType = {
+            minId: data[0].key.toString(),
+            maxId: data.at(-1).key.toString(),
+        }
+
+
+
+        await ssTable.write(metadata, data);
 
         this.structure.clear();
     }
